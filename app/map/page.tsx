@@ -4,7 +4,7 @@ import Script from "next/script";
 const Map = dynamic(() => import("@/app/Map"), { ssr:false });
 
 
-export default () => {
+const MapPage = () => {
     return (
         <>
             <Map>
@@ -20,3 +20,5 @@ export default () => {
         </>
     );
 };
+
+export default MapPage;

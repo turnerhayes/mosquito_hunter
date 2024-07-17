@@ -52,12 +52,6 @@ const MapComponent = (
     async (event: MouseEvent) => {
       const location = popupPosition!;
       event.stopPropagation();
-      // try {
-      //   await navigator.mediaDevices.getUserMedia({
-      //     video: true,
-      //     audio: false,
-      //   });
-      // } catch (e) {}
       const f = await takePhoto();
       const id = await savePhoto(f, location);
       dispatch(addSubmission({
@@ -67,7 +61,7 @@ const MapComponent = (
       setPopupPosition(null);
     },
     [
-      /*dispatch, */
+      dispatch,
       popupPosition,
       setPopupPosition,
     ]
@@ -96,7 +90,7 @@ const MapComponent = (
           <button
             onClick={handleTakePhotoClick}
             style={{
-              fontSize: "4em",
+              fontSize: "3.5em",
               background: "none",
               border: "none",
               appearance: "none",
@@ -123,6 +117,7 @@ const MapComponent = (
               <Popup>
                 <img
                   src={URL.createObjectURL(photo.file)}
+                  alt="Image of submitted breeding ground"
                 />
               </Popup>
             </Marker>
@@ -133,7 +128,7 @@ const MapComponent = (
   );
 };
 
-export default () => {
+export const MapContainerComponent = () => {
   const [center, setCenter] = useState<LatLngTuple>([30, 30]);
   const [existingPhotos, setExistingPhotos] = useState<Photo[]|undefined>();
 
@@ -164,3 +159,5 @@ export default () => {
     </>
   );
 };
+
+export default MapContainerComponent;
