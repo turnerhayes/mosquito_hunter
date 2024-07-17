@@ -31,3 +31,17 @@ body {
     text-wrap: balance;
   }
 }
+
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100vh;
+  width: 100vw;
+}
+
+.leaflet-container {
+  height: 100vh;
+  width: 100wh;
+}
