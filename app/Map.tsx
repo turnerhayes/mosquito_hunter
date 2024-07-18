@@ -1,37 +1,203 @@
 "use client";
 
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   MapContainer,
   TileLayer,
   Popup,
   Marker,
   useMapEvents,
+  LayersControl,
 } from "react-leaflet";
 import { Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { takePhoto, savePhoto, getPhotosForSubmissions } from "@/app/photos";
-import { addSubmission, Submission } from "@/redux/slices/submissions";
+import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
+import { addBreedingSite, BreedingSite } from "@/redux/slices/breeding_sites";
 import { PhotoId } from "@/app/photos.d";
-import { getSubmissions } from "@/redux/selectors";
+import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
 import Image from "next/image";
+import { LoggingType } from "@/app/index.d";
+import { MosquitoTrap } from "@/redux/slices/mosquito_traps";
+
+
+interface LayerMarker {
+  loggingType: LoggingType;
+  location: LatLngTuple;
+}
+
+const LogLocationButton = (
+  {
+    location,
+    loggingType,
+    onFinish,
+  }: {
+    location: LatLngTuple;
+    loggingType: LoggingType;
+    onFinish?: () => void;
+  }
+) => {
+  const dispatch = useAppDispatch();
+
+  const handleTakePhotoClick = useCallback(
+    async (event: MouseEvent) => {
+      event.stopPropagation();
+      const f = await takePhoto();
+      const id = await savePhoto(f);
+      dispatch(addBreedingSite({
+        location,
+        photoId: id,
+      }));
+      onFinish?.();
+    },
+    [
+      dispatch,
+      location,
+      onFinish,
+    ]
+  );
+
+  const handleLogTrap = useCallback(() => {}, []);
+
+  if (loggingType === LoggingType.MOSQUITO_TRAP) {
+    return (
+      <button
+        onClick={handleLogTrap}
+        className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
+      >
+        <Image
+          src="/no-mosquito.png"
+          alt="An icon of a mosquito with a cross through it, representing a mosquito trap"
+          width={32}
+          height={32}
+        />
+        <div>
+          Log a mosquito trap
+        </div>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleTakePhotoClick}
+      className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
+    >
+      <Image
+        src="/bucket.png"
+        alt="An icon of a bucket, representing a source of standing water"
+        width={32}
+        height={32}
+      />
+      <div>
+        Log standing water
+      </div>
+    </button>
+  );
+}
+
+const MapLayers = (
+  {
+    breedingSites,
+    breedingSitePhotos,
+    mosquitoTraps,
+  }: {
+    breedingSites: BreedingSite[];
+    breedingSitePhotos: {[photoId: PhotoId]: File};
+    mosquitoTraps: MosquitoTrap[]|null;
+  }
+) => {
+  const breedingSiteMarkers = breedingSites.map((breedingSite, index) => (
+    <Marker
+      key={index}
+      position={breedingSite.location}
+      icon={
+        new Icon({
+          iconUrl: "camera_map_marker.png",
+          iconSize: [40, 40],
+        })
+      }
+    >
+      <Popup>
+        {
+          breedingSitePhotos[breedingSite.photoId] ? (
+            <img
+              src={URL.createObjectURL(breedingSitePhotos[breedingSite.photoId])}
+              alt="Image of submitted breeding ground"
+            />
+          ) : null
+        }
+      </Popup>
+    </Marker>
+  ));
+
+  const mosquitoTrapMarkers = mosquitoTraps?.map((trap, index) => (
+    <Marker
+      key={index}
+      position={trap.location}
+    >
+    </Marker>
+  )) ?? [];
+
+  if (breedingSiteMarkers.length === 0) {
+    return null;
+  }
+
+  if (!mosquitoTraps) {
+    return breedingSiteMarkers;
+  }
+
+  return (
+    <LayersControl position="topright">
+          <LayersControl.Overlay name="Breeding sites" checked>
+              {breedingSiteMarkers}
+          </LayersControl.Overlay>
+          {
+            mosquitoTrapMarkers.length > 0 ? (
+              <LayersControl.Overlay name="Mosquito traps" checked>
+                {mosquitoTrapMarkers}
+              </LayersControl.Overlay>
+            ) : null
+          }
+    </LayersControl>
+  )
+};
 
 const MapComponent = (
   {
     center,
-    submissions,
-    submissionPhotos,
+    breedingSites,
+    breedingSitePhotos,
+    mosquitoTraps,
+    loggingType,
     onSetCenter,
   }: {
     center: LatLngTuple|null;
-    submissions: Submission[];
-    submissionPhotos: {[photoId: PhotoId]: File};
+    breedingSites: BreedingSite[];
+    breedingSitePhotos: {[photoId: PhotoId]: File};
+    mosquitoTraps: MosquitoTrap[]|null;
+    loggingType: LoggingType;
     onSetCenter: (center: LatLngTuple, map: Map) => void;
   }
 ) => {
   const [popupPosition, setPopupPosition] = useState<LatLngTuple | null>(null);
 
-  const dispatch = useAppDispatch();
+  const layerMarkers: {[type in LoggingType]: LayerMarker[]} = useMemo(() => {
+    const markerMap: {[type in LoggingType]: LayerMarker[]} = {
+      [LoggingType.BREEDING_SITE]: [],
+      [LoggingType.MOSQUITO_TRAP]: [],
+    };
+
+    for (const breedingSite of breedingSites) {
+      markerMap[LoggingType.BREEDING_SITE].push({
+        location: breedingSite.location,
+        loggingType: LoggingType.BREEDING_SITE,
+      });
+    }
+
+    return markerMap;
+  }, [
+    breedingSites
+  ]);
 
   const map = useMapEvents({
     locationfound(e) {
@@ -44,7 +210,6 @@ const MapComponent = (
       setPopupPosition(p);
     },
   });
-  
 
   useEffect(() => {
     map.locate();
@@ -52,30 +217,22 @@ const MapComponent = (
     map,
   ]);
 
-  const handleTakePhotoClick = useCallback(
-    async (event: MouseEvent) => {
-      const location = popupPosition!;
-      event.stopPropagation();
-      const f = await takePhoto();
-      const id = await savePhoto(f);
-      dispatch(addSubmission({
-        location,
-        photoId: id,
-      }));
-      setPopupPosition(null);
-    },
-    [
-      dispatch,
-      popupPosition,
-      setPopupPosition,
-    ]
-  );
+  const closePopup = useCallback(() => {
+    setPopupPosition(null);
+  }, [
+    setPopupPosition,
+  ]);
 
   return (
     <>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <MapLayers
+        breedingSites={breedingSites}
+        breedingSitePhotos={breedingSitePhotos}
+        mosquitoTraps={mosquitoTraps}
       />
       {
         center ? 
@@ -88,64 +245,38 @@ const MapComponent = (
       }
       {popupPosition ? (
         <Popup position={popupPosition}>
-          <button
-            onClick={handleTakePhotoClick}
-            className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
-          >
-            <Image
-              src="/bucket.png"
-              alt="An icon of a bucket, representing a source of standing water"
-              width={32}
-              height={32}
-            />
-            <div>
-              Log standing water
-            </div>
-          </button>
+          <LogLocationButton
+            location={popupPosition!}
+            loggingType={loggingType}
+            onFinish={closePopup}
+          />
         </Popup>
       ) : null}
-      {
-        submissions.map((submission, index) => (
-          <Marker
-            key={index}
-            position={submission.location}
-            icon={
-              new Icon({
-                iconUrl: "camera_map_marker.png",
-                iconSize: [40, 40],
-              })
-            }
-          >
-            <Popup>
-              {
-                submissionPhotos[submission.photoId] ? (
-                  <img
-                    src={URL.createObjectURL(submissionPhotos[submission.photoId])}
-                    alt="Image of submitted breeding ground"
-                  />
-                ) : null
-              }
-            </Popup>
-          </Marker>
-        ))
-      }
     </>
   );
 };
 
-export const MapContainerComponent = () => {
+export const MapContainerComponent = (
+  {
+    loggingType,
+  }: {
+    loggingType: LoggingType;
+  }
+) => {
   const [center, setCenter] = useState<LatLngTuple>([30, 30]);
-  const [submissionPhotos, setSubmissionPhotos] = useState<{[photoId: PhotoId]: File}>({});
+  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{[photoId: PhotoId]: File}>({});
 
-  const submissions = useAppSelector(getSubmissions);
+  const mosquitoTraps = useAppSelector(getMosquitoTraps);
+
+  const breedingSites = useAppSelector(getBreedingSites);
 
   useEffect(() => {
-    getPhotosForSubmissions(submissions).then((photos) => {
-      setSubmissionPhotos(photos);
+    getPhotosForBreedingSites(breedingSites).then((photos) => {
+      setBreedingSitePhotos(photos);
     });
   }, [
-    submissions,
-    setSubmissionPhotos,
+    breedingSites,
+    setBreedingSitePhotos,
   ]);
   
   const handleSetCenter = useCallback((center: LatLngTuple, map: Map) => {
@@ -161,8 +292,14 @@ export const MapContainerComponent = () => {
         <MapComponent
           center={center}
           onSetCenter={handleSetCenter}
-          submissions={submissions}
-          submissionPhotos={submissionPhotos}
+          breedingSites={breedingSites}
+          breedingSitePhotos={breedingSitePhotos}
+          mosquitoTraps={
+            loggingType === LoggingType.MOSQUITO_TRAP ?
+              mosquitoTraps :
+              null
+          }
+          loggingType={loggingType}
         />
       </MapContainer>
     </>

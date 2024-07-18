@@ -1,4 +1,7 @@
-import { RootState } from "./store";
+import { RootState } from "@/redux/store";
 
-export const getSubmissions = (state: RootState) =>
-  state.submissions.submissions;
+export const getBreedingSites = (state: RootState) =>
+  state.breedingSites.sites;
+
+export const getMosquitoTraps = (state: RootState) =>
+  state.mosquitoTraps.traps;

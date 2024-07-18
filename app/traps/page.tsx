@@ -5,11 +5,11 @@ import { LoggingType } from "@/app/index.d";
 const Map = dynamic(() => import("@/app/Map"), { ssr:false });
 
 
-const MapPage = () => {
+const TrapsPage = () => {
     return (
         <>
             <Map
-                loggingType={LoggingType.BREEDING_SITE}
+                loggingType={LoggingType.MOSQUITO_TRAP}
             />
             <Script
                 stylesheets={[
@@ -23,4 +23,4 @@ const MapPage = () => {
     );
 };
 
-export default MapPage;
+export default TrapsPage;

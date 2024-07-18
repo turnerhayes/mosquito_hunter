@@ -1,6 +1,6 @@
 import localforage from "localforage";
 import {PhotoId} from "@/app/photos.d";
-import { Submission } from "@/redux/slices/submissions";
+import { BreedingSite } from "@/redux/slices/breeding_sites";
 
 
 const PHOTOS_STORAGE_KEY_PREFIX = "photos > ";
@@ -30,8 +30,8 @@ export const getPhotoId = (photo: File): PhotoId => {
     return `${photo.name}--${photo.lastModified}`;
 };
 
-export const getPhotosForSubmissions = async (
-    submissions: Submission[]
+export const getPhotosForBreedingSites = async (
+    submissions: BreedingSite[]
 ): Promise<{[photoId: PhotoId]: File}> => {
     const files: {[photoId: PhotoId]: File} = {};
 

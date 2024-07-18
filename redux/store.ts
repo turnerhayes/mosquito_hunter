@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { submissionsReducer } from "./slices/submissions";
+import { breedingSitesReducer } from "@/redux/slices/breeding_sites";
+import { mosquitoTrapsReducer } from "@/redux/slices/mosquito_traps";
 
 export const store = configureStore({
   reducer: {
-    submissions: submissionsReducer,
+    breedingSites: breedingSitesReducer,
+    mosquitoTraps: mosquitoTrapsReducer,
   },
 });
 
