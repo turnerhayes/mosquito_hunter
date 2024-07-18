@@ -1,6 +1,6 @@
-import { LatLngTuple } from "leaflet";
 import localforage from "localforage";
-import {Photo, PhotoId} from "@/app/photos.d";
+import {PhotoId} from "@/app/photos.d";
+import { Submission } from "@/redux/slices/submissions";
 
 
 const PHOTOS_STORAGE_KEY_PREFIX = "photos > ";
@@ -30,34 +30,23 @@ export const getPhotoId = (photo: File): PhotoId => {
     return `${photo.name}--${photo.lastModified}`;
 };
 
-export const getPhotos = async (): Promise<Photo[]> => {
-    const keys = await localforage.keys();
-    const photos: Photo[] = [];
+export const getPhotosForSubmissions = async (
+    submissions: Submission[]
+): Promise<{[photoId: PhotoId]: File}> => {
+    const files: {[photoId: PhotoId]: File} = {};
 
-    for (const key of keys) {
-        let id: string = "";
-
-        if (key.startsWith(PHOTOS_STORAGE_KEY_PREFIX)) {
-            id = key.substring(PHOTOS_STORAGE_KEY_PREFIX.length);
-            const {
-                file,
-                location,
-            } = await localforage.getItem(key) as Pick<Photo, "file"|"location">;
-            photos.push({
-                id,
-                file,
-                location,
-            });
-        }
+    for (const submission of submissions) {
+        const photo = await localforage.getItem(
+            `${PHOTOS_STORAGE_KEY_PREFIX}${submission.photoId}`
+        ) as File;
+        files[submission.photoId] = photo;
     }
-    return photos;
+
+    return files;
 };
 
-export const savePhoto = async (photo: File, location: LatLngTuple): Promise<PhotoId> => {
+export const savePhoto = async (photo: File): Promise<PhotoId> => {
     const photoId = getPhotoId(photo);
-    await localforage.setItem(`${PHOTOS_STORAGE_KEY_PREFIX}${photoId}`, {
-        file: photo,
-        location,
-    });
+    await localforage.setItem(`${PHOTOS_STORAGE_KEY_PREFIX}${photoId}`, photo);
     return photoId;
 };

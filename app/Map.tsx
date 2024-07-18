@@ -9,19 +9,22 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import { Icon, LatLngTuple, Map } from "leaflet";
-import { useAppDispatch } from "@/redux/hooks";
-import { takePhoto, savePhoto, getPhotos } from "./photos";
-import { addSubmission } from "@/redux/slices/submissions";
-import { Photo } from "./photos.d";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { takePhoto, savePhoto, getPhotosForSubmissions } from "@/app/photos";
+import { addSubmission, Submission } from "@/redux/slices/submissions";
+import { PhotoId } from "@/app/photos.d";
+import { getSubmissions } from "@/redux/selectors";
 
 const MapComponent = (
   {
     center,
-    existingPhotos,
+    submissions,
+    submissionPhotos,
     onSetCenter,
   }: {
     center: LatLngTuple|null;
-    existingPhotos?: Photo[];
+    submissions: Submission[];
+    submissionPhotos: {[photoId: PhotoId]: File};
     onSetCenter: (center: LatLngTuple, map: Map) => void;
   }
 ) => {
@@ -53,7 +56,7 @@ const MapComponent = (
       const location = popupPosition!;
       event.stopPropagation();
       const f = await takePhoto();
-      const id = await savePhoto(f, location);
+      const id = await savePhoto(f);
       dispatch(addSubmission({
         location,
         photoId: id,
@@ -102,27 +105,29 @@ const MapComponent = (
         </Popup>
       ) : null}
       {
-        existingPhotos ? (
-          existingPhotos.map((photo, index) => (
-            <Marker
-              key={index}
-              position={photo.location}
-              icon={
-                new Icon({
-                  iconUrl: "camera_map_marker.png",
-                  iconSize: [40, 40],
-                })
+        submissions.map((submission, index) => (
+          <Marker
+            key={index}
+            position={submission.location}
+            icon={
+              new Icon({
+                iconUrl: "camera_map_marker.png",
+                iconSize: [40, 40],
+              })
+            }
+          >
+            <Popup>
+              {
+                submissionPhotos[submission.photoId] ? (
+                  <img
+                    src={URL.createObjectURL(submissionPhotos[submission.photoId])}
+                    alt="Image of submitted breeding ground"
+                  />
+                ) : null
               }
-            >
-              <Popup>
-                <img
-                  src={URL.createObjectURL(photo.file)}
-                  alt="Image of submitted breeding ground"
-                />
-              </Popup>
-            </Marker>
-          ))
-        ) : null
+            </Popup>
+          </Marker>
+        ))
       }
     </>
   );
@@ -130,14 +135,17 @@ const MapComponent = (
 
 export const MapContainerComponent = () => {
   const [center, setCenter] = useState<LatLngTuple>([30, 30]);
-  const [existingPhotos, setExistingPhotos] = useState<Photo[]|undefined>();
+  const [submissionPhotos, setSubmissionPhotos] = useState<{[photoId: PhotoId]: File}>({});
+
+  const submissions = useAppSelector(getSubmissions);
 
   useEffect(() => {
-    getPhotos().then((photos) => {
-      setExistingPhotos(photos);
+    getPhotosForSubmissions(submissions).then((photos) => {
+      setSubmissionPhotos(photos);
     });
   }, [
-    setExistingPhotos,
+    submissions,
+    setSubmissionPhotos,
   ]);
   
   const handleSetCenter = useCallback((center: LatLngTuple, map: Map) => {
@@ -153,7 +161,8 @@ export const MapContainerComponent = () => {
         <MapComponent
           center={center}
           onSetCenter={handleSetCenter}
-          existingPhotos={existingPhotos}
+          submissions={submissions}
+          submissionPhotos={submissionPhotos}
         />
       </MapContainer>
     </>
