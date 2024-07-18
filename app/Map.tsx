@@ -14,6 +14,7 @@ import { takePhoto, savePhoto, getPhotosForSubmissions } from "@/app/photos";
 import { addSubmission, Submission } from "@/redux/slices/submissions";
 import { PhotoId } from "@/app/photos.d";
 import { getSubmissions } from "@/redux/selectors";
+import Image from "next/image";
 
 const MapComponent = (
   {
@@ -87,20 +88,19 @@ const MapComponent = (
       }
       {popupPosition ? (
         <Popup position={popupPosition}>
-          <header>
-            <h4>Log standing water</h4>
-          </header>
           <button
             onClick={handleTakePhotoClick}
-            style={{
-              fontSize: "3.5em",
-              background: "none",
-              border: "none",
-              appearance: "none",
-              cursor: "pointer",
-            }}
+            className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
           >
-            📷
+            <Image
+              src="/bucket.png"
+              alt="An icon of a bucket, representing a source of standing water"
+              width={32}
+              height={32}
+            />
+            <div>
+              Log standing water
+            </div>
           </button>
         </Popup>
       ) : null}
