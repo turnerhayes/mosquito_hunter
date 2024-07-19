@@ -1,6 +1,6 @@
 "use client";
 
-import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -18,13 +18,8 @@ import { PhotoId } from "@/app/photos.d";
 import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
 import Image from "next/image";
 import { LoggingType } from "@/app/index.d";
-import { MosquitoTrap } from "@/redux/slices/mosquito_traps";
+import { addMosquitoTrap, MosquitoTrap } from "@/redux/slices/mosquito_traps";
 
-
-interface LayerMarker {
-  loggingType: LoggingType;
-  location: LatLngTuple;
-}
 
 const LogLocationButton = (
   {
@@ -57,7 +52,17 @@ const LogLocationButton = (
     ]
   );
 
-  const handleLogTrap = useCallback(() => {}, []);
+  const handleLogTrap = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+    dispatch(addMosquitoTrap({
+      location,
+    }));
+    onFinish?.();
+  }, [
+    dispatch,
+    location,
+    onFinish,
+  ]);
 
   if (loggingType === LoggingType.MOSQUITO_TRAP) {
     return (
@@ -66,8 +71,8 @@ const LogLocationButton = (
         className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
       >
         <Image
-          src="/no-mosquito.png"
-          alt="An icon of a mosquito with a cross through it, representing a mosquito trap"
+          src="/no_mosquito.png"
+          alt="An icon of a mosquito with a slash through it, representing a mosquito trap"
           width={32}
           height={32}
         />
@@ -113,7 +118,7 @@ const MapLayers = (
       position={breedingSite.location}
       icon={
         new Icon({
-          iconUrl: "camera_map_marker.png",
+          iconUrl: "bucket_map_pin.png",
           iconSize: [40, 40],
         })
       }
@@ -135,6 +140,10 @@ const MapLayers = (
     <Marker
       key={index}
       position={trap.location}
+      icon={new Icon({
+        iconUrl: "/mosquito_trap_pin.png",
+        iconSize: [40, 40],
+      })}
     >
     </Marker>
   )) ?? [];
