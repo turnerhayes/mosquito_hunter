@@ -129,6 +129,7 @@ const BreedingSiteMarker = (
         new Icon({
           iconUrl: "bucket_map_pin.png",
           iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
+          iconAnchor: [Math.floor(MAP_PIN_SIZE/2), MAP_PIN_SIZE],
         })
       }
     >
@@ -180,6 +181,7 @@ const MosquitoTrapMarker = (
       icon={new Icon({
         iconUrl: "/mosquito_trap_pin.png",
         iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
+        iconAnchor: [Math.floor(MAP_PIN_SIZE/2), MAP_PIN_SIZE],
       })}
     >
       <Popup>
