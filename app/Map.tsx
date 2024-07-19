@@ -181,8 +181,8 @@ const MosquitoTrapMarker = (
       position={location}
       icon={new Icon({
         iconUrl: "/mosquito_trap_pin.png",
-        iconSize: [MAP_PIN_HEIGHT, MAP_PIN_HEIGHT],
-        iconAnchor: [Math.floor(MAP_PIN_HEIGHT/2), MAP_PIN_HEIGHT],
+        iconSize: [MAP_PIN_WIDTH, MAP_PIN_HEIGHT],
+        iconAnchor: [Math.floor(MAP_PIN_WIDTH/2), MAP_PIN_HEIGHT],
       })}
     >
       <Popup>
