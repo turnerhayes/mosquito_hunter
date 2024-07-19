@@ -21,7 +21,8 @@ import { LoggingType } from "@/app/index.d";
 import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
 
 
-const MAP_PIN_SIZE = 50;
+const MAP_PIN_HEIGHT = 50;
+const MAP_PIN_WIDTH = 33;
 
 const LogLocationButton = (
   {
@@ -128,8 +129,8 @@ const BreedingSiteMarker = (
       icon={
         new Icon({
           iconUrl: "bucket_map_pin.png",
-          iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
-          iconAnchor: [Math.floor(MAP_PIN_SIZE/2), MAP_PIN_SIZE],
+          iconSize: [33, MAP_PIN_HEIGHT],
+          iconAnchor: [Math.floor(33/2), MAP_PIN_HEIGHT],
         })
       }
     >
@@ -180,8 +181,8 @@ const MosquitoTrapMarker = (
       position={location}
       icon={new Icon({
         iconUrl: "/mosquito_trap_pin.png",
-        iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
-        iconAnchor: [Math.floor(MAP_PIN_SIZE/2), MAP_PIN_SIZE],
+        iconSize: [MAP_PIN_HEIGHT, MAP_PIN_HEIGHT],
+        iconAnchor: [Math.floor(MAP_PIN_HEIGHT/2), MAP_PIN_HEIGHT],
       })}
     >
       <Popup>
