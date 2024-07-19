@@ -134,7 +134,9 @@ const BreedingSiteMarker = (
         })
       }
     >
-      <Popup>
+      <Popup
+        className="w-80"
+      >
         <header className="flex">
           <h4>
             Breeding ground
