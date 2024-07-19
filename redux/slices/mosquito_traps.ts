@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { LatLngTuple } from "leaflet";
+import { areLocationsEqual } from "../utils";
 
 
 export interface MosquitoTrap {
@@ -21,9 +22,17 @@ export const mosquitoTrapsSlice = createSlice({
     addMosquitoTrap(state, { payload }: PayloadAction<MosquitoTrap>) {
       state.traps.push(payload);
     },
+
+    removeMosquitoTrap(state, { payload }: PayloadAction<LatLngTuple>) {
+      const index = state.traps.findIndex((trap) => areLocationsEqual(payload, trap.location));
+
+      if (index >= 0) {
+        state.traps.splice(index, 1);
+      }
+    },
   },
 });
 
-export const { addMosquitoTrap } = mosquitoTrapsSlice.actions;
+export const { addMosquitoTrap, removeMosquitoTrap } = mosquitoTrapsSlice.actions;
 
 export const mosquitoTrapsReducer = mosquitoTrapsSlice.reducer;

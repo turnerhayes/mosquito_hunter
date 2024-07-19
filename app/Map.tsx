@@ -13,13 +13,15 @@ import {
 import { Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
-import { addBreedingSite, BreedingSite } from "@/redux/slices/breeding_sites";
+import { addBreedingSite, BreedingSite, removeBreedingSite } from "@/redux/slices/breeding_sites";
 import { PhotoId } from "@/app/photos.d";
 import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
 import Image from "next/image";
 import { LoggingType } from "@/app/index.d";
-import { addMosquitoTrap, MosquitoTrap } from "@/redux/slices/mosquito_traps";
+import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
 
+
+const MAP_PIN_SIZE = 50;
 
 const LogLocationButton = (
   {
@@ -101,6 +103,102 @@ const LogLocationButton = (
   );
 }
 
+const BreedingSiteMarker = (
+  {
+    location,
+    photo,
+  }: {
+    location: LatLngTuple;
+    photo?: File;
+  }
+) => {
+  const dispatch = useAppDispatch();
+
+  const handleRemoveBreedingGround = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+    dispatch(removeBreedingSite(location));
+  }, [
+    dispatch,
+    location,
+  ]);
+
+  return (
+    <Marker
+      position={location}
+      icon={
+        new Icon({
+          iconUrl: "bucket_map_pin.png",
+          iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
+        })
+      }
+    >
+      <Popup>
+        <header className="flex">
+          <h4>
+            Breeding ground
+          </h4>
+          <button
+            title="Remove logged breeding ground"
+            onClick={handleRemoveBreedingGround}
+          >
+            🗑️
+          </button>
+        </header>
+        {
+          photo ? (
+            <img
+              src={URL.createObjectURL(photo)}
+              alt="Image of submitted breeding ground"
+            />
+          ) : null
+        }
+      </Popup>
+    </Marker>
+  );
+};
+
+const MosquitoTrapMarker = (
+  {
+    location,
+  }: {
+    location: LatLngTuple;
+  }
+) => {
+  const dispatch = useAppDispatch();
+
+  const handleRemoveTrap = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+    dispatch(removeMosquitoTrap(location));
+  }, [
+    dispatch,
+    location,
+  ]);
+
+  return (
+    <Marker
+      position={location}
+      icon={new Icon({
+        iconUrl: "/mosquito_trap_pin.png",
+        iconSize: [MAP_PIN_SIZE, MAP_PIN_SIZE],
+      })}
+    >
+      <Popup>
+        <header className="flex">
+          <h4>
+            Mosquito trap
+          </h4>
+          <button
+            title="Remove logged mosquito trap"
+            onClick={handleRemoveTrap}
+          >
+            🗑️
+          </button>
+        </header>
+      </Popup>
+    </Marker>
+  );
+};
+
 const MapLayers = (
   {
     breedingSites,
@@ -113,39 +211,18 @@ const MapLayers = (
   }
 ) => {
   const breedingSiteMarkers = breedingSites.map((breedingSite, index) => (
-    <Marker
+    <BreedingSiteMarker
       key={index}
-      position={breedingSite.location}
-      icon={
-        new Icon({
-          iconUrl: "bucket_map_pin.png",
-          iconSize: [40, 40],
-        })
-      }
-    >
-      <Popup>
-        {
-          breedingSitePhotos[breedingSite.photoId] ? (
-            <img
-              src={URL.createObjectURL(breedingSitePhotos[breedingSite.photoId])}
-              alt="Image of submitted breeding ground"
-            />
-          ) : null
-        }
-      </Popup>
-    </Marker>
+      location={breedingSite.location}
+      photo={breedingSitePhotos[breedingSite.photoId]}
+    />
   ));
 
   const mosquitoTrapMarkers = mosquitoTraps?.map((trap, index) => (
-    <Marker
+    <MosquitoTrapMarker
       key={index}
-      position={trap.location}
-      icon={new Icon({
-        iconUrl: "/mosquito_trap_pin.png",
-        iconSize: [40, 40],
-      })}
-    >
-    </Marker>
+      location={trap.location}
+    />
   )) ?? [];
 
   if (breedingSiteMarkers.length === 0) {
