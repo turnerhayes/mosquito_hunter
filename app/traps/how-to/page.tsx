@@ -1,7 +1,7 @@
 const HowToBuildTrapsPage = () => {
     return (
         <>
-            <header>
+            <header className="mt-2">
                 <h1 className="text-2xl underline text-center">
                     How to Build a Mosquito Trap
                 </h1>
