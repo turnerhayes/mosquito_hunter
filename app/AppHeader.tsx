@@ -19,7 +19,7 @@ export const AppHeader = () => {
                     </div>
                     <li>
                         <Link
-                            href="/map"
+                            href="/breeding-sites"
                         >
                             Breeding Sites
                         </Link>
