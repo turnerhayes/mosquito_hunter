@@ -8,6 +8,7 @@ import {
   Marker,
   useMapEvents,
   LayersControl,
+  LayerGroup,
 } from "react-leaflet";
 import { Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -149,12 +150,16 @@ const MapLayers = (
   return (
     <LayersControl position="topright">
           <LayersControl.Overlay name="Breeding sites" checked>
+            <LayerGroup>
               {breedingSiteMarkers}
+            </LayerGroup>
           </LayersControl.Overlay>
           {
             mosquitoTrapMarkers.length > 0 ? (
               <LayersControl.Overlay name="Mosquito traps" checked>
-                {mosquitoTrapMarkers}
+                <LayerGroup>
+                  {mosquitoTrapMarkers}
+                </LayerGroup>
               </LayersControl.Overlay>
             ) : null
           }
@@ -180,24 +185,6 @@ const MapComponent = (
   }
 ) => {
   const [popupPosition, setPopupPosition] = useState<LatLngTuple | null>(null);
-
-  const layerMarkers: {[type in LoggingType]: LayerMarker[]} = useMemo(() => {
-    const markerMap: {[type in LoggingType]: LayerMarker[]} = {
-      [LoggingType.BREEDING_SITE]: [],
-      [LoggingType.MOSQUITO_TRAP]: [],
-    };
-
-    for (const breedingSite of breedingSites) {
-      markerMap[LoggingType.BREEDING_SITE].push({
-        location: breedingSite.location,
-        loggingType: LoggingType.BREEDING_SITE,
-      });
-    }
-
-    return markerMap;
-  }, [
-    breedingSites
-  ]);
 
   const map = useMapEvents({
     locationfound(e) {
@@ -234,15 +221,6 @@ const MapComponent = (
         breedingSitePhotos={breedingSitePhotos}
         mosquitoTraps={mosquitoTraps}
       />
-      {
-        center ? 
-          (
-            <Marker
-              position={center}
-            >
-            </Marker>
-          ) : null
-      }
       {popupPosition ? (
         <Popup position={popupPosition}>
           <LogLocationButton
