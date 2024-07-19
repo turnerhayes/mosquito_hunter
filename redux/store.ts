@@ -1,15 +1,43 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { persistStore, persistReducer, REGISTER, PURGE, PERSIST, PAUSE, REHYDRATE, FLUSH } from "redux-persist";
+import storage from "redux-persist/lib/storage";
 import { breedingSitesReducer } from "@/redux/slices/breeding_sites";
 import { mosquitoTrapsReducer } from "@/redux/slices/mosquito_traps";
 
-export const store = configureStore({
-  reducer: {
-    breedingSites: breedingSitesReducer,
-    mosquitoTraps: mosquitoTrapsReducer,
-  },
+
+const rootReducer = combineReducers({
+  breedingSites: breedingSitesReducer,
+  mosquitoTraps: mosquitoTrapsReducer,
 });
 
-// Infer the `RootState` and `AppDispatch` types from the store itself
-export type RootState = ReturnType<typeof store.getState>;
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState}
-export type AppDispatch = typeof store.dispatch;
+const persistConfig = {
+  key: 'root',
+  storage,
+};
+
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+
+export const makeStore = () => {
+  const store = configureStore({
+    reducer: persistedReducer,
+    middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      }
+    })
+  });
+  return store;
+};
+
+export const makeStoreAndPersistor = () => {
+  const store = makeStore();
+  let persistor = persistStore(store)
+  return { store, persistor }
+};
+
+
+type StoreType = ReturnType<typeof makeStore>;
+export type RootState = ReturnType<StoreType["getState"]>;
+export type AppDispatch = StoreType["dispatch"];

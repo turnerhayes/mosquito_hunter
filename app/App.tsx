@@ -2,8 +2,10 @@
 
 import { ReactNode } from "react";
 import { Provider } from "react-redux";
-import { store } from "@/redux/store";
+import { makeStoreAndPersistor } from "@/redux/store";
+import { PersistGate } from "redux-persist/integration/react";
 
+const {store, persistor} = makeStoreAndPersistor();
 
 export default function App(
   {
@@ -14,7 +16,9 @@ export default function App(
 ) {
   return (
     <Provider store={store}>
-      {children}
+      <PersistGate persistor={persistor}>
+        {children}
+      </PersistGate>
     </Provider>
   );
 }
