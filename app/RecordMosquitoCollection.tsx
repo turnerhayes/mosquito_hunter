@@ -84,8 +84,8 @@ export const RecordMosquitoCollection = () => {
                 <p className="mb-8 mt-6 text-xl">
                     Enter information about your captured mosquitoes here.
                 </p>
-                <div className="flex-1 flex flex-col items-center justify-center">
-                    <label className="flex m-2">
+                <div className="flex-1 flex flex-col items-start justify-center">
+                    <label className="flex flex-col items-start m-4">
                         <div className="mr-3">
                             Date:
                         </div>
@@ -98,7 +98,7 @@ export const RecordMosquitoCollection = () => {
                             required
                         />
                     </label>
-                    <label className="flex m-2">
+                    <label className="flex flex-col items-start m-4">
                         <div className="mr-3">
                             Number of mosquitoes:
                         </div>
@@ -113,7 +113,7 @@ export const RecordMosquitoCollection = () => {
                             required
                         />
                     </label>
-                    <label className="flex m-2">
+                    <label className="flex flex-col items-start m-4">
                         <div className="mr-3">
                             Photo of collection (optional):
                         </div>
@@ -127,7 +127,7 @@ export const RecordMosquitoCollection = () => {
 
                     <button
                         type="submit"
-                        className="m-4 bg-lime-600 p-2 rounded"
+                        className="m-4 bg-lime-600 p-2 rounded self-center"
                     >
                         Record collection
                     </button>                    
