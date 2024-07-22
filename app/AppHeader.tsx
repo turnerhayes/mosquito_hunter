@@ -39,6 +39,16 @@ export const AppHeader = () => {
                     </div>
                     <li>
                         <Link
+                            href="/collections"
+                        >
+                            Collected Specimens
+                        </Link>
+                    </li>
+                    <div className="m-1">
+                        |
+                    </div>
+                    <li>
+                        <Link
                             href="/traps/how-to"
                         >
                             Make a Trap

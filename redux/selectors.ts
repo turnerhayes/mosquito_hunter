@@ -5,3 +5,6 @@ export const getBreedingSites = (state: RootState) =>
 
 export const getMosquitoTraps = (state: RootState) =>
   state.mosquitoTraps.traps;
+
+export const getCollectionRecords = (state: RootState) =>
+  state.collectionRecords.records;

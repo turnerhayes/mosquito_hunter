@@ -3,11 +3,13 @@ import { persistStore, persistReducer, REGISTER, PURGE, PERSIST, PAUSE, REHYDRAT
 import storage from "redux-persist/lib/storage";
 import { breedingSitesReducer } from "@/redux/slices/breeding_sites";
 import { mosquitoTrapsReducer } from "@/redux/slices/mosquito_traps";
+import { collectionRecordsReducer } from "./slices/collection_records";
 
 
 const rootReducer = combineReducers({
   breedingSites: breedingSitesReducer,
   mosquitoTraps: mosquitoTrapsReducer,
+  collectionRecords: collectionRecordsReducer,
 });
 
 const persistConfig = {

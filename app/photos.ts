@@ -36,13 +36,18 @@ export const getPhotosForBreedingSites = async (
     const files: {[photoId: PhotoId]: File} = {};
 
     for (const submission of submissions) {
-        const photo = await localforage.getItem(
-            `${PHOTOS_STORAGE_KEY_PREFIX}${submission.photoId}`
-        ) as File;
-        files[submission.photoId] = photo;
+        files[submission.photoId] = await getPhoto(submission.photoId);
     }
 
     return files;
+};
+
+export const getPhoto = async (photoId: PhotoId) => {
+    const photo = await localforage.getItem(
+        `${PHOTOS_STORAGE_KEY_PREFIX}${photoId}`
+    ) as File;
+
+    return photo;
 };
 
 export const savePhoto = async (photo: File): Promise<PhotoId> => {
