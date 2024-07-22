@@ -64,14 +64,12 @@ const CollectionsTable = (
 
     if (collections.length === 0) {
         return (
-            <div>
-                <h3 className="text-xl">
-                    No collections are recorded. Record a
-                    collection <Link href="/collections/record">
-                        here
-                    </Link>.
-                </h3>
-            </div>
+            <h3 className="text-xl">
+                No collections are recorded. Record a
+                collection <Link href="/collections/record">
+                    here
+                </Link>.
+            </h3>
         );
     }
 
@@ -81,10 +79,10 @@ const CollectionsTable = (
                 <thead>
                     <tr>
                         <td className={CELL_CLASSES}>
-                            Collection Date
+                            Date
                         </td>
                         <td className={CELL_CLASSES}>
-                            Number of mosquitoes collected
+                            Count
                         </td>
                         <td className={CELL_CLASSES}>
                             Photo
@@ -133,18 +131,20 @@ export const Collections = () => {
     const collections = useAppSelector(getCollectionRecords);
 
     return (
-        <>
+        <div className="flex flex-col w-4/5 h-full mx-auto">
             <header className="mb-3 flex justify-between items-center">
-                <h1 className="text-3xl">
+                <h1 className="mb-8 mt-6 text-3xl">
                     Mosquito collections
                 </h1>
                 <Link href="/collections/record">
                     Record collection
                 </Link>
             </header>
-            <CollectionsTable
-                collections={collections}
-            />
-        </>
+            <div className="flex-1 flex items-center justify-center">
+                <CollectionsTable
+                    collections={collections}
+                />
+            </div>
+        </div>
     );
 };
