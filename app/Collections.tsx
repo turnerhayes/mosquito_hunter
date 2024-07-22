@@ -80,13 +80,13 @@ const CollectionsTable = (
             <table className="border-collapse">
                 <thead>
                     <tr>
-                        <td className={`${CELL_CLASSES}`}>
+                        <td className={CELL_CLASSES}>
                             Collection Date
                         </td>
-                        <td className={`${CELL_CLASSES}`}>
+                        <td className={CELL_CLASSES}>
                             Number of mosquitoes collected
                         </td>
-                        <td className={`${CELL_CLASSES}`}>
+                        <td className={CELL_CLASSES}>
                             Photo
                         </td>
                     </tr>
@@ -97,19 +97,21 @@ const CollectionsTable = (
                             <tr
                                 key={index}
                             >
-                                <td className={`${CELL_CLASSES}`}>
+                                <td className={CELL_CLASSES}>
                                     {formatter.format(collection.timestamp)}
                                 </td>
-                                <td className={`${CELL_CLASSES}`}>
+                                <td className={CELL_CLASSES}>
                                     {collection.numMosquitoes}
                                 </td>
-                                <td className={`${CELL_CLASSES}`}>
+                                <td className={CELL_CLASSES}>
                                     {
                                         collection.photoId ? (
-                                            <PopupPhotoButton
-                                                photoId={collection.photoId}
-                                                onClick={handlePopupPhotoClick}
-                                            />
+                                            <div className="w-full h-full flex justify-center">
+                                                <PopupPhotoButton
+                                                    photoId={collection.photoId}
+                                                    onClick={handlePopupPhotoClick}
+                                                />
+                                            </div>
                                         ) : null
                                     }
                                 </td>

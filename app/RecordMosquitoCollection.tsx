@@ -26,7 +26,7 @@ const getDateString = (date: Date) => {
 };
 
 export const RecordMosquitoCollection = () => {
-    const [collectionDate, setCollectionDate] = useState<Date|null>(null);
+    const [collectionDate, setCollectionDate] = useState<Date|null>(new Date());
     const [numMosquitoes, setNumMosquitoes] = useState<number|null>(null);
     const [photoId, setPhotoId] = useState<PhotoId|null>(null);
 
