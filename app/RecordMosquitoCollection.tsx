@@ -79,57 +79,59 @@ export const RecordMosquitoCollection = () => {
                 method="POST"
                 action="/record_mosquitoes"
                 onSubmit={handleSubmit}
-                className="flex flex-col items-start"
+                className="flex flex-col items-center h-full w-full"
             >
-                <p className="mb-4">
+                <p className="mb-8 mt-6 text-xl">
                     Enter information about your captured mosquitoes here.
                 </p>
-                <label className="flex m-2">
-                    <div className="mr-3">
-                        Date:
-                    </div>
-                    <input
-                        type="date"
-                        name="collection_date"
-                        className="text-neutral-950"
-                        value={collectionDate ? getDateString(collectionDate) : ""}
-                        onChange={handleCollectionDateChange}
-                        required
-                    />
-                </label>
-                <label className="flex m-2">
-                    <div className="mr-3">
-                        Number of mosquitoes:
-                    </div>
-                    <input
-                        type="number"
-                        name="num_mosquitoes"
-                        className="text-neutral-950 w-14"
-                        value={numMosquitoes ?? ""}
-                        onChange={handleNumMosquitoesChange}
-                        min="1"
-                        step="1"
-                        required
-                    />
-                </label>
-                <label className="flex m-2">
-                    <div className="mr-3">
-                        Photo of collection (optional):
-                    </div>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        name="photo"
-                        onChange={handlePhotoChange}
-                    />
-                </label>
+                <div className="flex-1 flex flex-col items-center justify-center">
+                    <label className="flex m-2">
+                        <div className="mr-3">
+                            Date:
+                        </div>
+                        <input
+                            type="date"
+                            name="collection_date"
+                            className="text-neutral-950"
+                            value={collectionDate ? getDateString(collectionDate) : ""}
+                            onChange={handleCollectionDateChange}
+                            required
+                        />
+                    </label>
+                    <label className="flex m-2">
+                        <div className="mr-3">
+                            Number of mosquitoes:
+                        </div>
+                        <input
+                            type="number"
+                            name="num_mosquitoes"
+                            className="text-neutral-950 w-14"
+                            value={numMosquitoes ?? ""}
+                            onChange={handleNumMosquitoesChange}
+                            min="1"
+                            step="1"
+                            required
+                        />
+                    </label>
+                    <label className="flex m-2">
+                        <div className="mr-3">
+                            Photo of collection (optional):
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            name="photo"
+                            onChange={handlePhotoChange}
+                        />
+                    </label>
 
-                <button
-                    type="submit"
-                    className="m-4 bg-lime-600 p-2 rounded"
-                >
-                    Record collection
-                </button>
+                    <button
+                        type="submit"
+                        className="m-4 bg-lime-600 p-2 rounded"
+                    >
+                        Record collection
+                    </button>                    
+                </div>
             </form>
         </>
     );
