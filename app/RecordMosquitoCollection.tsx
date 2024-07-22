@@ -1,10 +1,11 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { addRecord } from "@/redux/slices/collection_records";
 import { savePhoto } from "@/app/photos";
 import { PhotoId } from "@/app/photos.d";
+import { useRouter } from "next/navigation";
 
 
 const padToTwoDigits = (num: number) => {
@@ -45,6 +46,7 @@ const PhotoDisplay = (
         <div className="px-3">
             <header>
                 <button
+                    type="button"
                     onClick={toggleCollapsed}
                 >
                     {
@@ -67,10 +69,23 @@ export const RecordMosquitoCollection = () => {
     const [numMosquitoes, setNumMosquitoes] = useState<number|null>(null);
     const [photoId, setPhotoId] = useState<PhotoId|null>(null);
     const [photoUrl, setPhotoUrl] = useState<string|null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const router = useRouter();
     const dispatch = useAppDispatch();
 
+    const isSubmitEnabled = useMemo(() => {
+        return Boolean(collectionDate) &&
+            Boolean(numMosquitoes) &&
+            !isSubmitting;
+    }, [
+        collectionDate,
+        numMosquitoes,
+        isSubmitting,
+    ]);
+
     const handleSubmit = useCallback((event: FormEvent) => {
+        setIsSubmitting(true);
         event.preventDefault();
         if (!collectionDate || !numMosquitoes) {
             return false;
@@ -80,11 +95,15 @@ export const RecordMosquitoCollection = () => {
             numMosquitoes,
             photoId: photoId ?? undefined,
         }));
+        setIsSubmitting(false);
+        router.push("/collections");
     }, [
         dispatch,
+        setIsSubmitting,
         collectionDate,
         numMosquitoes,
         photoId,
+        router,
     ]);
 
     const handleCollectionDateChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
@@ -179,7 +198,8 @@ export const RecordMosquitoCollection = () => {
 
                     <button
                         type="submit"
-                        className="m-4 bg-lime-600 p-2 rounded self-center"
+                        disabled={!isSubmitEnabled}
+                        className="m-4 bg-lime-600 p-2 rounded self-center disabled:bg-slate-400"
                     >
                         Record collection
                     </button>                    
