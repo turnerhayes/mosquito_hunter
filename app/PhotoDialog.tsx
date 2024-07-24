@@ -66,6 +66,8 @@ export const PhotoDialog = (
         close,
         dialogRef,
         photoId,
+        photoUrl,
+        isOpen,
     ]);
 
     const handleCloseClick = useCallback(() => {
@@ -118,6 +120,7 @@ export const PhotoDialog = (
                         photoUrl ? (
                             <img
                                 src={photoUrl}
+                                alt="Photo being displayed in the dialog"
                             >
                             </img>
                         ) : (

@@ -59,6 +59,7 @@ const PhotoDisplay = (
             <img
                 src={photoUrl}
                 className={`${isCollapsed ? "hidden" : ""}`}
+                alt="Uploaded photo of collection"
             />
         </div>
     );
