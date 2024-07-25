@@ -24,31 +24,34 @@ export const PhotoDialog = (
         if (callCloseOnDialog) {
             dialogRef.current?.close();
         }
+        if (photoUrl) {
+            URL.revokeObjectURL(photoUrl);
+        }
         setPhotoUrl(null);
         setIsOpen(false);
         onClose?.();
     }, [
         dialogRef,
+        photoUrl,
         setIsOpen,
         onClose,
     ]);
 
     useEffect(() => {
         if (photoId) {
-            getPhoto(photoId).then((photo) => {
-                if (photo) {
-                    setPhotoUrl(URL.createObjectURL(photo));
-                }
-            });
+            if (!photoUrl) {
+                getPhoto(photoId).then((photo) => {
+                    if (photo) {
+                        setPhotoUrl(URL.createObjectURL(photo));
+                    }
+                });
+            }
             if (!isOpen) {
                 dialogRef.current?.showModal();
                 setIsOpen(true);
             }
         }
         else {
-            if (photoUrl) {
-                URL.revokeObjectURL(photoUrl);
-            }
             if (isOpen) {
                 close();
             }
