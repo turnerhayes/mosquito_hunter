@@ -10,7 +10,7 @@ import {
   LayersControl,
   LayerGroup,
 } from "react-leaflet";
-import { Icon, LatLngTuple, Map } from "leaflet";
+import { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
 import { addBreedingSite, BreedingSite, removeBreedingSite } from "@/redux/slices/breeding_sites";
@@ -252,11 +252,13 @@ const MapComponent = (
     breedingSitePhotos,
     mosquitoTraps,
     onSetCenter,
+    onLocateError,
   }: {
     breedingSites: BreedingSite[];
     breedingSitePhotos: { [photoId: PhotoId]: File | null };
     mosquitoTraps: MosquitoTrap[];
     onSetCenter: (center: LatLngTuple, map: Map) => void;
+    onLocateError: (error: ErrorEvent) => void;
   }
 ) => {
   const [popupPosition, setPopupPosition] = useState<LatLngTuple | null>(null);
@@ -265,6 +267,10 @@ const MapComponent = (
     locationfound(e) {
       const p: LatLngTuple = [e.latlng.lat, e.latlng.lng];
       onSetCenter(p, map);
+    },
+
+    locationerror(err) {
+      onLocateError(err);
     },
 
     click(e) {
@@ -317,8 +323,9 @@ const MapComponent = (
 };
 
 export const MapContainerComponent = () => {
-  const [center, setCenter] = useState<LatLngTuple>([30, 30]);
+  const [center, setCenter] = useState<LatLngTuple|null>(null);
   const [breedingSitePhotos, setBreedingSitePhotos] = useState<{ [photoId: PhotoId]: File | null }>({});
+  const [locateError, setLocateError] = useState(false);
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
 
@@ -340,11 +347,47 @@ export const MapContainerComponent = () => {
     setCenter,
   ]);
 
+  const handleLocateError = useCallback(async () => {
+    setLocateError(true);
+    setCenter(null);
+    const result = await navigator.permissions.query({
+      name: "geolocation",
+    });
+
+    if (result.state !== "granted") {
+      result.onchange = (event) => {
+        if (result.state !== "denied") {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setCenter([position.coords.latitude, position.coords.longitude]);
+            },
+            (err) => {
+              console.error(err);
+            }
+          );
+        }
+      };
+    }
+  }, [
+    setLocateError,
+  ]);
+
   return (
     <>
-      <MapContainer center={center} zoom={16} scrollWheelZoom={false}>
+      {
+        locateError ? (
+          <div className="w-full bg-red-600 p-2">
+            <p>
+              Could not find where you are to move the map. Please give
+              permission to access your location and reload the page.
+            </p>
+          </div>
+        ) : null
+      }
+      <MapContainer center={center ?? [0, 0]} zoom={16} scrollWheelZoom={false}>
         <MapComponent
           onSetCenter={handleSetCenter}
+          onLocateError={handleLocateError}
           breedingSites={breedingSites}
           breedingSitePhotos={breedingSitePhotos}
           mosquitoTraps={mosquitoTraps}
