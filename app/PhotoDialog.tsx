@@ -36,7 +36,9 @@ export const PhotoDialog = (
     useEffect(() => {
         if (photoId) {
             getPhoto(photoId).then((photo) => {
-                setPhotoUrl(URL.createObjectURL(photo));
+                if (photo) {
+                    setPhotoUrl(URL.createObjectURL(photo));
+                }
             });
             if (!isOpen) {
                 dialogRef.current?.showModal();
@@ -51,15 +53,6 @@ export const PhotoDialog = (
                 close();
             }
         }
-
-        return () => {
-            if (photoUrl) {
-                URL.revokeObjectURL(photoUrl);
-            }
-            if (isOpen) {
-                close();
-            }
-        };
     }, [
         setPhotoUrl,
         setIsOpen,

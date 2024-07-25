@@ -110,7 +110,7 @@ const BreedingSiteMarker = (
     photo,
   }: {
     location: LatLngTuple;
-    photo?: File;
+    photo?: File|null;
   }
 ) => {
   const dispatch = useAppDispatch();
@@ -211,7 +211,7 @@ const MapLayers = (
     mosquitoTraps,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: File};
+    breedingSitePhotos: {[photoId: PhotoId]: File|null};
     mosquitoTraps: MosquitoTrap[]|null;
   }
 ) => {
@@ -269,7 +269,7 @@ const MapComponent = (
   }: {
     center: LatLngTuple|null;
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: File};
+    breedingSitePhotos: {[photoId: PhotoId]: File|null};
     mosquitoTraps: MosquitoTrap[]|null;
     loggingType: LoggingType;
     onSetCenter: (center: LatLngTuple, map: Map) => void;
@@ -333,7 +333,7 @@ export const MapContainerComponent = (
   }
 ) => {
   const [center, setCenter] = useState<LatLngTuple>([30, 30]);
-  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{[photoId: PhotoId]: File}>({});
+  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{[photoId: PhotoId]: File|null}>({});
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
 
