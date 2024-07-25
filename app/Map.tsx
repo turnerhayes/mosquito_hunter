@@ -28,19 +28,20 @@ const MAP_PIN_WIDTH = 33;
 const createLocateMeButton = () => {
   const LocateMeButton = L.Control.extend({
     onAdd(map: Map) {
-      const btn = L.DomUtil.create("button", "leaflet-control leaflet-bar bg-white");
+      const div =  L.DomUtil.create("div", "leaflet-control")
+      const btn = L.DomUtil.create("button", "bg-white leaflet-bar");
       btn.setAttribute("title", "Move the map to your current location");
       const icon = L.DomUtil.create("img", "w-8 h-8");
       btn.appendChild(icon);
       icon.src = `${BASE_PATH}/locate-me.svg`;
+      div.appendChild(btn);
 
       btn.addEventListener("click", (ev: MouseEvent) => {
-        ev.preventDefault();
         ev.stopPropagation();
         map.locate();
       });
 
-      return btn;
+      return div;
     }
   });
 
