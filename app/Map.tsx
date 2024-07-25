@@ -296,6 +296,10 @@ const MapComponent = (
     },
 
     click(e) {
+      if (popupPosition) {
+        setPopupPosition(null);
+        return;
+      }
       const p: LatLngTuple = [e.latlng.lat, e.latlng.lng];
       setPopupPosition(p);
     },
@@ -337,17 +341,22 @@ const MapComponent = (
       />
       {popupPosition ? (
         <Popup position={popupPosition}>
-          <div className="flex gap-x-1">
-            <LogLocationButton
-              location={popupPosition!}
-              loggingType={LoggingType.BREEDING_SITE}
-              onFinish={closePopup}
-            />
-            <LogLocationButton
-              location={popupPosition!}
-              loggingType={LoggingType.MOSQUITO_TRAP}
-              onFinish={closePopup}
-            />
+          <div>
+            <header>
+              <h3 className="text-lg">Log a site</h3>
+            </header>
+            <div className="flex gap-x-1">
+              <LogLocationButton
+                location={popupPosition!}
+                loggingType={LoggingType.BREEDING_SITE}
+                onFinish={closePopup}
+              />
+              <LogLocationButton
+                location={popupPosition!}
+                loggingType={LoggingType.MOSQUITO_TRAP}
+                onFinish={closePopup}
+              />
+            </div>
           </div>
         </Popup>
       ) : null}
