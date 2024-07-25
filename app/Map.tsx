@@ -161,7 +161,7 @@ const BreedingSiteMarker = (
       <Popup
         className="w-80"
       >
-        <header className="flex">
+        <header className="flex justify-between">
           <h4>
             Breeding ground
           </h4>

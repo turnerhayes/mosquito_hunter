@@ -3,6 +3,7 @@
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import { PhotoId } from "./photos.d";
 import { getPhoto } from "./photos";
+import { CloseIcon } from "./CloseIcon.svg";
 
 export const PhotoDialog = (
     {
@@ -114,7 +115,9 @@ export const PhotoDialog = (
                         onClick={handleCloseClick}
                         className="p-2"
                     >
-                        X
+                        <CloseIcon
+                            className="w-5 h-5"
+                        />
                     </button>
                 </header>
                 <div
