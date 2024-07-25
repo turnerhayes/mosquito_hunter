@@ -32,7 +32,7 @@ const createLocateMeButton = () => {
       btn.setAttribute("title", "Move the map to your current location");
       const icon = L.DomUtil.create("img", "w-8 h-8");
       btn.appendChild(icon);
-      icon.src = "/locate-me.svg";
+      icon.src = `${BASE_PATH}/locate-me.svg`;
 
       btn.addEventListener("click", (ev: MouseEvent) => {
         ev.preventDefault();
