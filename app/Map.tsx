@@ -44,7 +44,7 @@ const createLocateMeButton = () => {
     }
   });
 
-  return new LocateMeButton({position: "bottomleft"});
+  return new LocateMeButton({position: "topleft"});
 };
 
 const LogLocationButton = (
