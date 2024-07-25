@@ -203,7 +203,7 @@ export const RecordMosquitoCollection = () => {
                         className="m-4 bg-lime-600 p-2 rounded self-center disabled:bg-slate-400"
                     >
                         Record collection
-                    </button>                    
+                    </button>
                 </div>
             </form>
         </>

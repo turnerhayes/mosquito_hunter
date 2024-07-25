@@ -1,11 +1,15 @@
-Bucket icon: Bucket icons created by Roundicons - Flaticon
+Bucket icon (bucket.png, bucket_map_pin.png): Bucket icons created by Roundicons - Flaticon
 
 https://www.flaticon.com/free-icons/bucket
 
-Plastic bottle icon: Water bottle icons created by Mehwish - Flaticon
-
-https://www.flaticon.com/free-icons/water-bottle
-
-No mosquito icon: Dengue icons created by Leremy - Flaticon
+No mosquito icon (no_mosquito.png, mosquito_trap_pin.png): Dengue icons created by Leremy - Flaticon
 
 https://www.flaticon.com/free-icons/dengue
+
+Photo of mosquito larvae (mosquito_larvae.png):
+
+(Image: James Gathany, CDC), CC BY 2.5 <https://creativecommons.org/licenses/by/2.5>, via Wikimedia Commons
+
+Photo of Plasmodium parasite (plasmodium.png):
+
+image by Ute Frevert;false color by Margaret Shear, CC BY 2.5 <https://creativecommons.org/licenses/by/2.5>, via Wikimedia Commons
