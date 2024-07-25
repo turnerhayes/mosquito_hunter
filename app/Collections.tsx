@@ -14,6 +14,23 @@ const formatter = new Intl.DateTimeFormat();
 
 const CELL_CLASSES = "border border-white p-2";
 
+const RecordCollectionLink = (
+    {
+        children,
+    }: {
+        children: string;
+    }
+) => {
+    return (
+        <Link
+            href="/collections/record"
+            className="underline text-blue-600"
+        >
+            {children}
+        </Link>
+    );
+};
+
 const PopupPhotoButton = (
     {
         photoId,
@@ -66,9 +83,9 @@ const CollectionsTable = (
         return (
             <h3 className="text-xl">
                 No collections are recorded. Record a
-                collection <Link href="/collections/record">
+                collection <RecordCollectionLink>
                     here
-                </Link>.
+                </RecordCollectionLink>.
             </h3>
         );
     }
@@ -136,9 +153,9 @@ export const Collections = () => {
                 <h1 className="mb-8 mt-6 text-3xl">
                     Mosquito collections
                 </h1>
-                <Link href="/collections/record">
+                <RecordCollectionLink>
                     Record collection
-                </Link>
+                </RecordCollectionLink>
             </header>
             <div className="flex-1 flex items-center justify-center">
                 <CollectionsTable
