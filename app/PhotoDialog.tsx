@@ -66,6 +66,14 @@ export const PhotoDialog = (
         isOpen,
     ]);
 
+    useEffect(() => {
+        return () => {
+            if (photoUrl) {
+                URL.revokeObjectURL(photoUrl);
+            }
+        };
+    }, []);
+
     const handleCloseClick = useCallback(() => {
         close();
     }, [
