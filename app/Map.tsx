@@ -19,6 +19,7 @@ import { PhotoId } from "@/app/photos.d";
 import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
 import { LoggingType } from "@/app/index.d";
 import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
+import { BASE_PATH } from "./path";
 
 
 const MAP_PIN_HEIGHT = 50;
@@ -96,7 +97,7 @@ const LogLocationButton = (
         className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
       >
         <Image
-          src="/no_mosquito.png"
+          src={`${BASE_PATH}/no_mosquito.png`}
           alt="An icon of a mosquito with a slash through it, representing a mosquito trap"
           width={32}
           height={32}
@@ -114,7 +115,7 @@ const LogLocationButton = (
       className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
     >
       <Image
-        src="/bucket.png"
+        src={`${BASE_PATH}/bucket.png`}
         alt="An icon of a bucket, representing a source of standing water"
         width={32}
         height={32}

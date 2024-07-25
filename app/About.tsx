@@ -6,6 +6,7 @@ import { SettingName, updateSettings } from "@/redux/slices/settings_slice";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
+import { BASE_PATH } from "./path";
 
 export const About = () => {
     const dispatch = useAppDispatch();
@@ -38,7 +39,7 @@ export const About = () => {
                     </p>
                     <figure className="p-1 m-2 float-right border rounded">
                         <Image
-                            src="/plasmodium.jpg"
+                            src={`${BASE_PATH}/plasmodium.jpg`}
                             alt="Imaage of a Plasmodium parasite"
                             width={160}
                             height={160}
@@ -58,7 +59,7 @@ export const About = () => {
                     </p>
                     <figure className="p-1 m-2 clear-right float-left border rounded">
                         <Image
-                            src="/mosquito_larvae.png"
+                            src={`${BASE_PATH}/mosquito_larvae.png`}
                             alt="Photo of mosquito larvae"
                             width={160}
                             height={97}
