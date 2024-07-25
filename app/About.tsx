@@ -99,7 +99,7 @@ export const About = () => {
                                     className="m-4 bg-lime-600 p-2 rounded self-center"
                                     onClick={handleButtonClick}
                                 >
-                                    Let's go!
+                                    Let&apos;s go!
                                 </button>
                             </div>
                         ) : null
