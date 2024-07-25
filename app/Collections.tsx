@@ -5,7 +5,7 @@ import { useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
 import { getCollectionRecords } from "@/redux/selectors";
 import { CollectionRecord } from "@/redux/slices/collection_records";
-import { PopupIcon } from "@/app/PopupIcon";
+import { PopupIcon } from "@/app/PopupIcon.svg";
 import { PhotoDialog } from "@/app/PhotoDialog";
 import { PhotoId } from "@/app/photos.d";
 

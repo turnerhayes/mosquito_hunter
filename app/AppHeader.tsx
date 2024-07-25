@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HouseIcon } from "./HouseIcon";
+import { HouseIcon } from "./HouseIcon.svg";
 import { Fragment, ReactElement } from "react";
 
 

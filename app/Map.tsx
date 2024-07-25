@@ -1,6 +1,7 @@
 "use client";
 
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import {
   MapContainer,
   TileLayer,
@@ -10,19 +11,40 @@ import {
   LayersControl,
   LayerGroup,
 } from "react-leaflet";
-import { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
+import L, { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
 import { addBreedingSite, BreedingSite, removeBreedingSite } from "@/redux/slices/breeding_sites";
 import { PhotoId } from "@/app/photos.d";
 import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
-import Image from "next/image";
 import { LoggingType } from "@/app/index.d";
 import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
 
 
 const MAP_PIN_HEIGHT = 50;
 const MAP_PIN_WIDTH = 33;
+
+const createLocateMeButton = () => {
+  const LocateMeButton = L.Control.extend({
+    onAdd(map: Map) {
+      const btn = L.DomUtil.create("button", "leaflet-control leaflet-bar bg-white");
+      btn.setAttribute("title", "Move the map to your current location");
+      const icon = L.DomUtil.create("img", "w-8 h-8");
+      btn.appendChild(icon);
+      icon.src = "/locate-me.svg";
+
+      btn.addEventListener("click", (ev: MouseEvent) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        map.locate();
+      });
+
+      return btn;
+    }
+  });
+
+  return new LocateMeButton({position: "bottomleft"});
+};
 
 const LogLocationButton = (
   {
@@ -38,7 +60,7 @@ const LogLocationButton = (
   const dispatch = useAppDispatch();
 
   const handleTakePhotoClick = useCallback(
-    async (event: MouseEvent) => {
+    async (event: React.MouseEvent) => {
       event.stopPropagation();
       const f = await takePhoto();
       const id = await savePhoto(f);
@@ -55,7 +77,7 @@ const LogLocationButton = (
     ]
   );
 
-  const handleLogTrap = useCallback((event: MouseEvent) => {
+  const handleLogTrap = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     dispatch(addMosquitoTrap({
       location,
@@ -115,7 +137,7 @@ const BreedingSiteMarker = (
 ) => {
   const dispatch = useAppDispatch();
 
-  const handleRemoveBreedingGround = useCallback((event: MouseEvent) => {
+  const handleRemoveBreedingGround = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     dispatch(removeBreedingSite(location));
   }, [
@@ -170,7 +192,7 @@ const MosquitoTrapMarker = (
 ) => {
   const dispatch = useAppDispatch();
 
-  const handleRemoveTrap = useCallback((event: MouseEvent) => {
+  const handleRemoveTrap = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
     dispatch(removeMosquitoTrap(location));
   }, [
@@ -285,6 +307,17 @@ const MapComponent = (
     map,
   ]);
 
+  useEffect(() => {
+    const control = createLocateMeButton();
+    map.addControl(control);
+
+    return () => {
+      map.removeControl(control);
+    };
+  }, [
+    map,
+  ]);
+
   const closePopup = useCallback(() => {
     setPopupPosition(null);
   }, [
@@ -328,7 +361,6 @@ export const MapContainerComponent = () => {
   const [locateError, setLocateError] = useState(false);
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
-
   const breedingSites = useAppSelector(getBreedingSites);
 
   useEffect(() => {
@@ -347,6 +379,19 @@ export const MapContainerComponent = () => {
     setCenter,
   ]);
 
+  const locateAndSetCenter = useCallback(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCenter([position.coords.latitude, position.coords.longitude]);
+      },
+      (err) => {
+        console.error(err);
+      }
+    );
+  }, [
+    setCenter,
+  ]);
+
   const handleLocateError = useCallback(async () => {
     setLocateError(true);
     setCenter(null);
@@ -357,19 +402,21 @@ export const MapContainerComponent = () => {
     if (result.state !== "granted") {
       result.onchange = (event) => {
         if (result.state !== "denied") {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setCenter([position.coords.latitude, position.coords.longitude]);
-            },
-            (err) => {
-              console.error(err);
-            }
-          );
+          locateAndSetCenter();
         }
       };
     }
   }, [
     setLocateError,
+    locateAndSetCenter,
+  ]);
+
+  const handleLocateMeButtonClick = useCallback((event: MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    locateAndSetCenter();
+  }, [
+    locateAndSetCenter,
   ]);
 
   return (
