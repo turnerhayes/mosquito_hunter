@@ -71,7 +71,7 @@ const LogLocationButton = (
     return (
       <button
         onClick={handleLogTrap}
-        className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
+        className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
       >
         <Image
           src="/no_mosquito.png"
@@ -89,7 +89,7 @@ const LogLocationButton = (
   return (
     <button
       onClick={handleTakePhotoClick}
-      className="w-14 cursor-pointer bg-transparent border rounded flex flex-col items-center"
+      className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
     >
       <Image
         src="/bucket.png"
@@ -110,7 +110,7 @@ const BreedingSiteMarker = (
     photo,
   }: {
     location: LatLngTuple;
-    photo?: File|null;
+    photo?: File | null;
   }
 ) => {
   const dispatch = useAppDispatch();
@@ -130,7 +130,7 @@ const BreedingSiteMarker = (
         new Icon({
           iconUrl: "bucket_map_pin.png",
           iconSize: [33, MAP_PIN_HEIGHT],
-          iconAnchor: [Math.floor(33/2), MAP_PIN_HEIGHT],
+          iconAnchor: [Math.floor(33 / 2), MAP_PIN_HEIGHT],
         })
       }
     >
@@ -184,11 +184,11 @@ const MosquitoTrapMarker = (
       icon={new Icon({
         iconUrl: "/mosquito_trap_pin.png",
         iconSize: [MAP_PIN_WIDTH, MAP_PIN_HEIGHT],
-        iconAnchor: [Math.floor(MAP_PIN_WIDTH/2), MAP_PIN_HEIGHT],
+        iconAnchor: [Math.floor(MAP_PIN_WIDTH / 2), MAP_PIN_HEIGHT],
       })}
     >
       <Popup>
-        <header className="flex">
+        <header className="flex justify-between">
           <h4>
             Mosquito trap
           </h4>
@@ -211,8 +211,8 @@ const MapLayers = (
     mosquitoTraps,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: File|null};
-    mosquitoTraps: MosquitoTrap[]|null;
+    breedingSitePhotos: { [photoId: PhotoId]: File | null };
+    mosquitoTraps: MosquitoTrap[];
   }
 ) => {
   const breedingSiteMarkers = breedingSites.map((breedingSite, index) => (
@@ -223,55 +223,39 @@ const MapLayers = (
     />
   ));
 
-  const mosquitoTrapMarkers = mosquitoTraps?.map((trap, index) => (
+  const mosquitoTrapMarkers = mosquitoTraps.map((trap, index) => (
     <MosquitoTrapMarker
       key={index}
       location={trap.location}
     />
   )) ?? [];
 
-  if (breedingSiteMarkers.length === 0) {
-    return null;
-  }
-
-  if (!mosquitoTraps) {
-    return breedingSiteMarkers;
-  }
-
   return (
     <LayersControl position="topright">
-          <LayersControl.Overlay name="Breeding sites" checked>
-            <LayerGroup>
-              {breedingSiteMarkers}
-            </LayerGroup>
-          </LayersControl.Overlay>
-          {
-            mosquitoTrapMarkers.length > 0 ? (
-              <LayersControl.Overlay name="Mosquito traps" checked>
-                <LayerGroup>
-                  {mosquitoTrapMarkers}
-                </LayerGroup>
-              </LayersControl.Overlay>
-            ) : null
-          }
+      <LayersControl.Overlay name="Breeding sites" checked>
+        <LayerGroup>
+          {breedingSiteMarkers}
+        </LayerGroup>
+      </LayersControl.Overlay>
+      <LayersControl.Overlay name="Mosquito traps" checked>
+        <LayerGroup>
+          {mosquitoTrapMarkers}
+        </LayerGroup>
+      </LayersControl.Overlay>
     </LayersControl>
   )
 };
 
 const MapComponent = (
   {
-    center,
     breedingSites,
     breedingSitePhotos,
     mosquitoTraps,
-    loggingType,
     onSetCenter,
   }: {
-    center: LatLngTuple|null;
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: File|null};
-    mosquitoTraps: MosquitoTrap[]|null;
-    loggingType: LoggingType;
+    breedingSitePhotos: { [photoId: PhotoId]: File | null };
+    mosquitoTraps: MosquitoTrap[];
     onSetCenter: (center: LatLngTuple, map: Map) => void;
   }
 ) => {
@@ -314,26 +298,27 @@ const MapComponent = (
       />
       {popupPosition ? (
         <Popup position={popupPosition}>
-          <LogLocationButton
-            location={popupPosition!}
-            loggingType={loggingType}
-            onFinish={closePopup}
-          />
+          <div className="flex gap-x-1">
+            <LogLocationButton
+              location={popupPosition!}
+              loggingType={LoggingType.BREEDING_SITE}
+              onFinish={closePopup}
+            />
+            <LogLocationButton
+              location={popupPosition!}
+              loggingType={LoggingType.MOSQUITO_TRAP}
+              onFinish={closePopup}
+            />
+          </div>
         </Popup>
       ) : null}
     </>
   );
 };
 
-export const MapContainerComponent = (
-  {
-    loggingType,
-  }: {
-    loggingType: LoggingType;
-  }
-) => {
+export const MapContainerComponent = () => {
   const [center, setCenter] = useState<LatLngTuple>([30, 30]);
-  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{[photoId: PhotoId]: File|null}>({});
+  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{ [photoId: PhotoId]: File | null }>({});
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
 
@@ -347,7 +332,7 @@ export const MapContainerComponent = (
     breedingSites,
     setBreedingSitePhotos,
   ]);
-  
+
   const handleSetCenter = useCallback((center: LatLngTuple, map: Map) => {
     setCenter(center);
     map.setView(center);
@@ -359,16 +344,10 @@ export const MapContainerComponent = (
     <>
       <MapContainer center={center} zoom={16} scrollWheelZoom={false}>
         <MapComponent
-          center={center}
           onSetCenter={handleSetCenter}
           breedingSites={breedingSites}
           breedingSitePhotos={breedingSitePhotos}
-          mosquitoTraps={
-            loggingType === LoggingType.MOSQUITO_TRAP ?
-              mosquitoTraps :
-              null
-          }
-          loggingType={loggingType}
+          mosquitoTraps={mosquitoTraps}
         />
       </MapContainer>
     </>

@@ -1,12 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { useAppSelector } from "@/redux/hooks";
 import { getSetting } from "@/redux/selectors";
 import { SettingName } from "@/redux/slices/settings_slice";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+
+
+const Map = dynamic(() => import("@/app/Map"), { ssr:false });
 
 export const Home = () => {
     const router = useRouter();
@@ -23,35 +26,15 @@ export const Home = () => {
     ]);
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-24">
-            <ul>
-                <li>
-                    <Link href="/breeding-sites">
-                        <button>
-                            <Image
-                                src="/standing_water.jpg"
-                                alt="Image depicting a source of standing water"
-                                width={300}
-                                height={200}
-                            />
-                            Log standing water locations
-                        </button>
-                    </Link>
-                </li>
-                <li>
-                    <Link href="/traps">
-                        <button>
-                            <Image
-                                src="/mosquito_trap_photo.webp"
-                                alt="Image depicting a homemade mosquito trap"
-                                width={300}
-                                height={200}
-                            />
-                            Log mosquito traps placed
-                        </button>
-                    </Link>
-                </li>
-            </ul>
-        </main>
+        <>
+           <Map
+            />
+            <Script
+                stylesheets={[
+                    "https://unpkg.com/leaflet@1.6.0/dist/leaflet.css",
+                ]}
+                src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            />
+        </>
     );
 };

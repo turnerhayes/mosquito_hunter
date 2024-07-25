@@ -26,14 +26,6 @@ export const AppHeader = () => {
             ),
         },
         {
-            url: "/breeding-sites",
-            text: "Breeding Sites",
-        },
-        {
-            url: "/traps",
-            text: "Traps",
-        },
-        {
             url: "/collections",
             text: "Collected Specimens",
         },
