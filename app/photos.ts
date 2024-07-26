@@ -1,5 +1,5 @@
 import localforage from "localforage";
-import {PhotoId} from "@/app/photos.d";
+import {PhotoDimensions, PhotoId, PhotoWithDimensions} from "@/app/photos.d";
 import { BreedingSite } from "@/redux/slices/breeding_sites";
 
 
@@ -34,8 +34,8 @@ export const getPhotoId = (photo: File): PhotoId => {
 
 export const getPhotosForBreedingSites = async (
     submissions: BreedingSite[]
-): Promise<{[photoId: PhotoId]: File|null}> => {
-    const files: {[photoId: PhotoId]: File|null} = {};
+): Promise<{[photoId: PhotoId]: PhotoWithDimensions|null}> => {
+    const files: {[photoId: PhotoId]: PhotoWithDimensions|null} = {};
 
     for (const submission of submissions) {
         files[submission.photoId] = await getPhoto(submission.photoId);
@@ -114,7 +114,8 @@ const writeFile = async (
     await writeable.close();
 };
 
-export const getPhoto = async (photoId: PhotoId): Promise<File|null> => {
+export const getPhoto = async (photoId: PhotoId): Promise<PhotoWithDimensions|null> => {
+    let file: File|null = null;
     if (useOPFS) {
         const photosDir = await getPhotosDirectory(false);
 
@@ -122,14 +123,46 @@ export const getPhoto = async (photoId: PhotoId): Promise<File|null> => {
             return null;
         }
 
-        return await getFile(photosDir, photoId);
+        file = await getFile(photosDir, photoId);
+
+    }
+    else {
+        file = await localforage.getItem(
+            `${PHOTOS_STORAGE_KEY_PREFIX}${photoId}`
+        ) as File|null;
     }
 
-    const photo = await localforage.getItem(
-        `${PHOTOS_STORAGE_KEY_PREFIX}${photoId}`
-    ) as File|null;
+    if (!file) {
+         return null;
+    }
 
-    return photo;
+    const dimensions = await getImageDimensions(file);
+
+    return {
+        file,
+        dimensions,
+    };
+};
+
+export const getImageDimensions = async (photo: File): Promise<PhotoDimensions> => {
+    const img = new Image();
+    const photoUrl = URL.createObjectURL(photo);
+    const dimPromise = new Promise<{
+        width: number;
+        height: number;
+    }>((resolve) => {
+        img.onload = () => {
+            resolve({
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+            });
+            img.src = "";
+            URL.revokeObjectURL(photoUrl);
+        };
+    });
+    img.src = photoUrl;
+
+    return dimPromise;
 };
 
 export const savePhoto = async (photo: File): Promise<PhotoId> => {

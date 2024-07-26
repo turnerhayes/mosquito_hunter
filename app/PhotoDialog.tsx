@@ -1,9 +1,10 @@
 "use client";
 
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
-import { PhotoId } from "./photos.d";
+import { PhotoId, PhotoWithDimensions } from "./photos.d";
 import { getPhoto } from "./photos";
 import { CloseIcon } from "./CloseIcon.svg";
+import Image from "next/image";
 
 export const PhotoDialog = (
     {
@@ -18,6 +19,7 @@ export const PhotoDialog = (
 ) => {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const bodyRef = useRef<HTMLDivElement>(null);
+    const [photo, setPhoto] = useState<PhotoWithDimensions|null>(null);
     const [photoUrl, setPhotoUrl] = useState<string|null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
@@ -28,6 +30,7 @@ export const PhotoDialog = (
         if (photoUrl) {
             URL.revokeObjectURL(photoUrl);
         }
+        setPhoto(null);
         setPhotoUrl(null);
         setIsOpen(false);
         onClose?.();
@@ -43,7 +46,8 @@ export const PhotoDialog = (
             if (!photoUrl) {
                 getPhoto(photoId).then((photo) => {
                     if (photo) {
-                        setPhotoUrl(URL.createObjectURL(photo));
+                        setPhoto(photo);
+                        setPhotoUrl(URL.createObjectURL(photo.file));
                     }
                 });
             }
@@ -73,7 +77,7 @@ export const PhotoDialog = (
                 URL.revokeObjectURL(photoUrl);
             }
         };
-    }, []);
+    });
 
     const handleCloseClick = useCallback(() => {
         close();
@@ -124,12 +128,13 @@ export const PhotoDialog = (
                     className="flex-1"
                 >
                     {
-                        photoUrl ? (
-                            <img
+                        photo && photoUrl ? (
+                            <Image
                                 src={photoUrl}
+                                width={photo.dimensions.width}
+                                height={photo.dimensions.height}
                                 alt="Photo being displayed in the dialog"
-                            >
-                            </img>
+                            />
                         ) : (
                             <div>
                                 Loading...

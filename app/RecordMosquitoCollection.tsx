@@ -1,11 +1,12 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAppDispatch } from "@/redux/hooks";
 import { addRecord } from "@/redux/slices/collection_records";
-import { savePhoto } from "@/app/photos";
-import { PhotoId } from "@/app/photos.d";
+import { getImageDimensions, savePhoto } from "@/app/photos";
+import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 
 const padToTwoDigits = (num: number) => {
@@ -28,12 +29,14 @@ const getDateString = (date: Date) => {
 
 const PhotoDisplay = (
     {
-        photoUrl,
+        photo,
     }: {
-        photoUrl: string;
+        photo: PhotoWithDimensions;
     }
 ) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [photoUrl, setPhotoUrl] = useState<string|null>(null);
+    const prevPhotoRef = useRef<PhotoWithDimensions>();
 
     const toggleCollapsed = useCallback(() => {
         setIsCollapsed(!isCollapsed);
@@ -41,6 +44,37 @@ const PhotoDisplay = (
         isCollapsed,
         setIsCollapsed,
     ]);
+
+    useEffect(() => {
+        if (photoUrl && prevPhotoRef.current?.file !== photo.file) {
+            URL.revokeObjectURL(photoUrl);
+        }
+        if (photo.file && prevPhotoRef.current?.file !== photo.file) {
+            setPhotoUrl(URL.createObjectURL(photo.file));
+        }
+    }, [
+        photo,
+        prevPhotoRef,
+        photoUrl,
+        setPhotoUrl,
+    ]);
+
+    useEffect(() => {
+        if (prevPhotoRef.current?.file !== photo.file) {
+            prevPhotoRef.current = photo;
+        }
+    }, [
+        photo,
+        prevPhotoRef,
+    ]);
+
+    useEffect(() => {
+        return () => {
+            if (photoUrl) {
+                URL.revokeObjectURL(photoUrl);
+            }
+        };
+    });
 
     return (
         <div className="px-3">
@@ -56,11 +90,17 @@ const PhotoDisplay = (
                     }
                 </button>
             </header>
-            <img
-                src={photoUrl}
-                className={`${isCollapsed ? "hidden" : ""}`}
-                alt="Uploaded photo of collection"
-            />
+            {
+                photo && photoUrl ? (
+                    <Image
+                        src={photoUrl}
+                        className={`${isCollapsed ? "hidden" : ""}`}
+                        alt="Uploaded photo of collection"
+                        width={photo.dimensions.width}
+                        height={photo.dimensions.height}
+                    />
+                ) : null
+            }
         </div>
     );
 };
@@ -69,7 +109,7 @@ export const RecordMosquitoCollection = () => {
     const [collectionDate, setCollectionDate] = useState<Date|null>(new Date());
     const [numMosquitoes, setNumMosquitoes] = useState<number|null>(null);
     const [photoId, setPhotoId] = useState<PhotoId|null>(null);
-    const [photoUrl, setPhotoUrl] = useState<string|null>(null);
+    const [photo, setPhoto] = useState<PhotoWithDimensions|null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
@@ -122,20 +162,25 @@ export const RecordMosquitoCollection = () => {
     const handlePhotoChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) {
-            if (photoUrl) {
-                URL.revokeObjectURL(photoUrl);
-                setPhotoUrl(null);
+            if (photo) {
+                setPhoto(null);
             }
             return;
         }
 
-        const photoId = await savePhoto(file);
+        const [photoId, dimensions] = await Promise.all([
+            savePhoto(file),
+            getImageDimensions(file),
+        ]);
         setPhotoId(photoId);
-        setPhotoUrl(URL.createObjectURL(file));
+        setPhoto({
+            file,
+            dimensions,
+        });
     }, [
         setPhotoId,
-        setPhotoUrl,
-        photoUrl,
+        setPhoto,
+        photo,
     ]);
 
     return (
@@ -190,9 +235,9 @@ export const RecordMosquitoCollection = () => {
                         />
                     </label>
                     {
-                        photoUrl ? (
+                        photo ? (
                             <PhotoDisplay
-                                photoUrl={photoUrl}
+                                photo={photo}
                             />
                         ) : null
                     }

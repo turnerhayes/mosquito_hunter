@@ -23,6 +23,7 @@ export const Home = () => {
         }
     }, [
         router,
+        showEducation,
     ]);
 
     return (

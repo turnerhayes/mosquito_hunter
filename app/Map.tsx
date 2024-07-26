@@ -15,7 +15,7 @@ import L, { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
 import { addBreedingSite, BreedingSite, removeBreedingSite } from "@/redux/slices/breeding_sites";
-import { PhotoId } from "@/app/photos.d";
+import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
 import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
 import { LoggingType } from "@/app/index.d";
 import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
@@ -134,9 +134,20 @@ const BreedingSiteMarker = (
     photo,
   }: {
     location: LatLngTuple;
-    photo?: File | null;
+    photo?: PhotoWithDimensions | null;
   }
 ) => {
+  const [photoUrl, setPhotoUrl] = useState<string|null>(null);
+
+  useEffect(() => {
+    if (photo) {
+      setPhotoUrl(URL.createObjectURL(photo.file));
+    }
+  }, [
+    photo,
+    setPhotoUrl,
+  ]);
+
   const dispatch = useAppDispatch();
 
   const handleRemoveBreedingGround = useCallback((event: React.MouseEvent) => {
@@ -173,10 +184,12 @@ const BreedingSiteMarker = (
           </button>
         </header>
         {
-          photo ? (
-            <img
-              src={URL.createObjectURL(photo)}
+          photo && photoUrl ? (
+            <Image
+              src={photoUrl}
               alt="Image of submitted breeding ground"
+              width={photo.dimensions.width}
+              height={photo.dimensions.height}
             />
           ) : null
         }
@@ -235,7 +248,7 @@ const MapLayers = (
     mosquitoTraps,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: { [photoId: PhotoId]: File | null };
+    breedingSitePhotos: {[photoId: PhotoId]: PhotoWithDimensions|null};
     mosquitoTraps: MosquitoTrap[];
   }
 ) => {
@@ -279,7 +292,7 @@ const MapComponent = (
     onLocateError,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: { [photoId: PhotoId]: File | null };
+    breedingSitePhotos: {[photoId: PhotoId]: PhotoWithDimensions|null};
     mosquitoTraps: MosquitoTrap[];
     onSetCenter: (center: LatLngTuple, map: Map) => void;
     onLocateError: (error: ErrorEvent) => void;
@@ -368,7 +381,9 @@ const MapComponent = (
 
 export const MapContainerComponent = () => {
   const [center, setCenter] = useState<LatLngTuple|null>(null);
-  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{ [photoId: PhotoId]: File | null }>({});
+  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{
+    [photoId: PhotoId]: PhotoWithDimensions|null;
+  }>({});
   const [locateError, setLocateError] = useState(false);
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
