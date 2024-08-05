@@ -110,6 +110,39 @@ export const addBreedingSite = async (
     }
 };
 
+export const getBreedingSite = async (
+    {
+        id,
+    }: {
+        id: number;
+    }
+) => {
+    const client = await getClient();
+
+    const {rows} = await client.query(
+        `
+            SELECT
+                location,
+                photo_id
+            FROM
+                breeding_sites
+            WHERE
+                id = $1
+        `,
+        [
+            id,
+        ]
+    );
+
+    const {location, photo_id} = rows[0];
+
+    return {
+        id,
+        location: [location.x, location.y],
+        photo_id,
+    };
+};
+
 export const addTrap = async (
     {
         location,
