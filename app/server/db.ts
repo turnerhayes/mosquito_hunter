@@ -110,6 +110,27 @@ export const addBreedingSite = async (
     }
 };
 
+export const getAllBreedingSites = async () => {
+    const client = await getClient();
+
+    const {rows} = await client.query(
+        `
+            SELECT
+                id,
+                location,
+                photo_id
+            FROM
+                breeding_sites
+        `
+    );
+
+    return rows.map(({id, location, photo_id}) => ({
+        id,
+        location: [location.x, location.y],
+        photo_id,
+    }));
+};
+
 export const getBreedingSite = async (
     {
         id,
@@ -174,6 +195,25 @@ export const addTrap = async (
         await client.query("ROLLBACK");
         throw ex;
     }
+};
+
+export const getAllTraps = async () => {
+    const client = await getClient();
+
+    const {rows} = await client.query(
+        `
+            SELECT
+                id,
+                location
+            FROM
+                traps
+        `
+    );
+
+    return rows.map(({id, location}) => ({
+        id,
+        location: [location.x, location.y],
+    }));
 };
 
 export const getTrap = async (
