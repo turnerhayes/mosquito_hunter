@@ -1,10 +1,10 @@
-import { addBreedingSite } from "@/app/server/db";
+import { addTrap } from "@/app/server/db";
 
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(
-    request: Request,
+    _request: Request,
     {
         params: {
             location,
@@ -16,7 +16,7 @@ export async function POST(
     }
 ) {
     if (!location) {
-        return new Response("Empty location for breeding site", {
+        return new Response("Empty location for trap", {
             status: 400,
         });
     }
@@ -49,33 +49,15 @@ export async function POST(
         );
     }
 
-    const photoType = request.headers.get("Content-Type");
-
-    if (!photoType) {
-        return new Response("Missing Content-Type header", {
-            status: 400,
-        });
-    }
-
     try {
-        const photo = await request.arrayBuffer();
-
-        if (!photo || photo.byteLength === 0) {
-            return new Response("No file uploaded", {
-                status: 400,
-            });
-        }
-    
-        const id = await addBreedingSite({
-            photo,
-            photoType,
+        const id = await addTrap({
             location: locationPair,
         });
 
-        return new Response("Breeding site added", {
+        return new Response("Trap added", {
             status: 201,
             headers: {
-                "Location": `/api/breeding_sites/${id}`,
+                "Location": `/api/traps/${id}`,
             },
         });
     }
@@ -85,5 +67,4 @@ export async function POST(
             statusText: (ex as Error).message,
         });
     }
-
 }

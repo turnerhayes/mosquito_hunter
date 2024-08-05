@@ -83,7 +83,7 @@ export const addBreedingSite = async (
         const photoId = await insertPhoto({
             file: photo,
             type: photoType,
-        })
+        });
         const {rows} = await client.query(
             `
                 INSERT INTO breeding_sites (
@@ -98,6 +98,39 @@ export const addBreedingSite = async (
             [
                 `(${location[0]},${location[1]})`,
                 photoId,
+            ]
+        );
+        const id = rows[0].id;
+        await client.query("COMMIT");
+        return id;
+    }
+    catch (ex) {
+        await client.query("ROLLBACK");
+        throw ex;
+    }
+};
+
+export const addTrap = async (
+    {
+        location,
+    }: {
+        location: [number, number];
+    }
+): Promise<number> => {
+    const client = await getClient();
+
+    try {
+        const {rows} = await client.query(
+            `
+                INSERT INTO traps (
+                    location,
+                ) VALUES (
+                    $1,
+                )
+                RETURNING id
+            `,
+            [
+                `(${location[0]},${location[1]})`,
             ]
         );
         const id = rows[0].id;
