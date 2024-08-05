@@ -52,8 +52,6 @@ export const getPhoto = async (id: number) => {
         SELECT filename, mime_type, file FROM photos WHERE id = ${id}
     `);
 
-    // console.log(`\n\n=========\n\n${res["file"]}\n\n=========\n\n`);
-
     const buff = Buffer.from(res["file"], "hex");
 
     const file = new File(
@@ -64,4 +62,50 @@ export const getPhoto = async (id: number) => {
         }
     );
     return file;
+};
+
+export const addBreedingSite = async (
+    {
+        location,
+        photo,
+        photoType
+    }: {
+        location: [number, number];
+        photo: ArrayBufferLike;
+        photoType: string;
+    }
+): Promise<number> => {
+    const client = await getClient();
+
+    await client.query("BEGIN");
+
+    try {
+        const photoId = await insertPhoto({
+            file: photo,
+            type: photoType,
+        })
+        const {rows} = await client.query(
+            `
+                INSERT INTO breeding_sites (
+                    location,
+                    photo_id
+                ) VALUES (
+                    $1,
+                    $2
+                )
+                RETURNING id
+            `,
+            [
+                `(${location[0]},${location[1]})`,
+                photoId,
+            ]
+        );
+        const id = rows[0].id;
+        await client.query("COMMIT");
+        return id;
+    }
+    catch (ex) {
+        await client.query("ROLLBACK");
+        throw ex;
+    }
 };

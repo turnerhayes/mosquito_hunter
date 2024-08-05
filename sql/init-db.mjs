@@ -30,11 +30,13 @@ async function run() {
         `);
         await client.query(`
             CREATE TABLE IF NOT EXISTS traps (
+                id SERIAL PRIMARY KEY,
                 location POINT
             )
         `);
         await client.query(`
             CREATE TABLE IF NOT EXISTS breeding_sites (
+                id SERIAL PRIMARY KEY,
                 location POINT,
                 photo_id INTEGER REFERENCES photos (id)
             )
