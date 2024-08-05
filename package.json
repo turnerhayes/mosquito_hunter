@@ -7,9 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "init-db": "ts-node -r dotenv/config ./init-db dotenv_config_path=.env.local",
-    "insert-photos": "ts-node -r dotenv/config ./insert_photos dotenv_config_path=.env.local",
-    "clear-db": "ts-node -r dotenv/config ./clear-db dotenv_config_path=.env.local"
+    "init-db": "node sql/init-db.mjs",
+    "clear-db": "node sql/clear-db.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.6",
@@ -18,12 +17,12 @@
     "leaflet": "^1.9.4",
     "localforage": "^1.10.0",
     "next": "14.2.5",
+    "pg": "^8.12.0",
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
     "react-redux": "^9.1.2",
-    "redux-persist": "^6.0.0",
-    "ts-node": "^10.9.2"
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.5.8",

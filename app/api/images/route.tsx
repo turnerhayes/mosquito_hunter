@@ -1,27 +1,36 @@
 import { insertPhoto } from "@/app/server/db";
 
+
 export const dynamic = 'force-dynamic';
 
-
 export async function POST(request: Request) {
-    const {
-        file,
-        filename,
-        type,
-    } = request.body?.values();
+    const type = request.headers.get("Content-Type");
+
+    if (!type) {
+        return new Response("Missing Content-Type header", {
+            status: 400,
+        });
+    }
 
     try {
-        const photo = await insertPhoto({
+        const file = await request.arrayBuffer();
+
+        if (!file || file.byteLength === 0) {
+            return new Response("No file uploaded", {
+                status: 400,
+            });
+        }
+    
+        const id = await insertPhoto({
             file,
-            filename,
             type,
         });
 
-        return new Response("", {
+        return new Response("Image uploaded", {
+            status: 201,
             headers: {
-                "Content-Type": type,
-                "X-Filename": filename,
-            }
+                "Location": `/api/images/${id}`,
+            },
         });
     }
     catch (ex) {
