@@ -1,4 +1,4 @@
-import { addTrap } from "@/app/server/db";
+import { addTrap, getTrap } from "@/app/server/db";
 
 
 export const dynamic = 'force-dynamic';
@@ -7,11 +7,11 @@ export async function POST(
     _request: Request,
     {
         params: {
-            location,
+            locationOrId: location,
         },
     }: {
         params: {
-            location: string;
+            locationOrId: string;
         };
     }
 ) {
@@ -60,6 +60,44 @@ export async function POST(
                 "Location": `/api/traps/${id}`,
             },
         });
+    }
+    catch (ex) {
+        return new Response(null, {
+            status: 500,
+            statusText: (ex as Error).message,
+        });
+    }
+}
+
+export async function GET(
+    _request: Request,
+    {
+        params: {
+            locationOrId: id,
+        },
+    }: {
+        params: {
+            locationOrId: string;
+        };
+    }
+) {
+    const idNum = Number(id);
+
+    if (Number.isNaN(idNum)) {
+        return new Response(
+            `${id} is not a valid number`,
+            {
+                status: 400,
+            }
+        );
+    }
+
+    try {
+        const trap = await getTrap({
+            id: idNum,
+        });
+
+        return Response.json(trap);
     }
     catch (ex) {
         return new Response(null, {

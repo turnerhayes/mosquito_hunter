@@ -175,3 +175,34 @@ export const addTrap = async (
         throw ex;
     }
 };
+
+export const getTrap = async (
+    {
+        id,
+    }: {
+        id: number;
+    }
+) => {
+    const client = await getClient();
+
+    const {rows} = await client.query(
+        `
+            SELECT
+                location
+            FROM
+                traps
+            WHERE
+                id = $1
+        `,
+        [
+            id,
+        ]
+    );
+
+    const {location} = rows[0];
+
+    return {
+        id,
+        location: [location.x, location.y],
+    };
+};
