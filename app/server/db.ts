@@ -123,9 +123,9 @@ export const addTrap = async (
         const {rows} = await client.query(
             `
                 INSERT INTO traps (
-                    location,
+                    location
                 ) VALUES (
-                    $1,
+                    $1
                 )
                 RETURNING id
             `,
