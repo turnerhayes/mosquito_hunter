@@ -1,4 +1,4 @@
-import { addTrap, getTrap } from "@/app/server/db";
+import { addTrap, getTrap, removeMosquitoTrap } from "@/app/server/db";
 
 
 export const dynamic = 'force-dynamic';
@@ -65,6 +65,49 @@ export async function POST(
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
+        });
+    }
+}
+
+export async function DELETE(
+    _response: Response,
+    {
+        params: {
+            locationOrId: idString,
+        }
+    }: {
+        params: {
+            locationOrId: string;
+        };
+    }
+) {
+    const id = Number(idString);
+
+    if (Number.isNaN(id)) {
+        return new Response(
+            `${idString} is not a valid mosquito trap ID; must be an integer`,
+            {
+                status: 400,
+            }
+        );
+    }
+
+    try {
+        const removed = await removeMosquitoTrap(id);
+
+        if (!removed) {
+            return new Response(`No trap with id ${id} found`, {
+                status: 404,
+            });
+        }
+        return new Response(null, {
+            status: 204,
+        });
+    }
+    catch (ex) {
+        return new Response(null, {
+            status: 500,
+            statusText: (ex as Error).message
         });
     }
 }

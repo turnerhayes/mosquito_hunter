@@ -13,3 +13,8 @@ export interface BreedingSite {
     photo_width: number;
     photo_height: number;
 }
+
+export interface MosquitoTrap {
+    id: number;
+    location: LatLngTuple;
+}

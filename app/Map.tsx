@@ -14,15 +14,11 @@ import {
 } from "react-leaflet";
 import L, { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { takePhoto, savePhoto, getImageDimensions } from "@/app/photos";
-import { removeBreedingSite } from "@/redux/slices/breeding_sites";
-import { BreedingSite } from "@/app/index";
-import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
-import { getMosquitoTraps } from "@/redux/selectors";
-import { LoggingType } from "@/app/index.d";
-import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
+import { takePhoto, getImageDimensions } from "@/app/photos";
+import { BreedingSite, MosquitoTrap } from "@/app/index";
 import { BASE_PATH } from "@/app/path";
 import { useAddBreedingSiteMutation, useRemoveBreedingSiteMutation } from "@/app/api/client/breeding_sites";
+import { useAddMosquitoTrapMutation, useRemoveMosquitoTrapMutation } from "./api/client/mosquito_traps";
 
 
 const MAP_PIN_HEIGHT = 50;
@@ -120,19 +116,20 @@ const LogMosquitoTrapButton = (
     onFinish?: () => void;
   }
 ) => {
-  const dispatch = useAppDispatch();
+  const [addMosquitoTrap] = useAddMosquitoTrapMutation();
 
-  const handleLogTrap = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    dispatch(addMosquitoTrap({
+  const handleLogTrap = useCallback(
+    async (event: React.MouseEvent) => {
+      event.stopPropagation();
+      await addMosquitoTrap({
+        location,
+      });
+      onFinish?.();
+    }, [
       location,
-    }));
-    onFinish?.();
-  }, [
-    dispatch,
-    location,
-    onFinish,
-  ]);
+      onFinish,
+    ]
+  );
 
   return (
     <button
@@ -211,24 +208,29 @@ const BreedingSiteMarker = (
 
 const MosquitoTrapMarker = (
   {
-    location,
+    trap,
   }: {
-    location: LatLngTuple;
+    trap: MosquitoTrap;
   }
 ) => {
-  const dispatch = useAppDispatch();
+  const map = useMap();
+  const [removeMosquitoTrap] = useRemoveMosquitoTrapMutation();
 
-  const handleRemoveTrap = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    dispatch(removeMosquitoTrap(location));
-  }, [
-    dispatch,
-    location,
-  ]);
+  const handleRemoveTrap = useCallback(
+    async (event: React.MouseEvent) => {
+      event.stopPropagation();
+      await removeMosquitoTrap(trap.id);
+      map.closePopup();
+    }, [
+      removeMosquitoTrap,
+      trap,
+      map,
+    ]
+  );
 
   return (
     <Marker
-      position={location}
+      position={trap.location}
       icon={new Icon({
         iconUrl: `${BASE_PATH}/mosquito_trap_pin.png`,
         iconSize: [MAP_PIN_WIDTH, MAP_PIN_HEIGHT],
@@ -261,17 +263,17 @@ const MapLayers = (
     mosquitoTraps: MosquitoTrap[];
   }
 ) => {
-  const breedingSiteMarkers = breedingSites.map((breedingSite, index) => (
+  const breedingSiteMarkers = breedingSites.map((breedingSite) => (
     <BreedingSiteMarker
-      key={index}
+      key={breedingSite.id}
       breedingSite={breedingSite}
     />
   ));
 
-  const mosquitoTrapMarkers = mosquitoTraps.map((trap, index) => (
+  const mosquitoTrapMarkers = mosquitoTraps.map((trap) => (
     <MosquitoTrapMarker
-      key={index}
-      location={trap.location}
+      key={trap.id}
+      trap={trap}
     />
   )) ?? [];
 
@@ -385,14 +387,14 @@ const MapComponent = (
 export const MapContainerComponent = (
   {
     breedingSites,
+    mosquitoTraps,
   }: {
     breedingSites: BreedingSite[];
+    mosquitoTraps: MosquitoTrap[];
   }
 ) => {
   const [center, setCenter] = useState<LatLngTuple|null>(null);
   const [locateError, setLocateError] = useState(false);
-
-  const mosquitoTraps = useAppSelector(getMosquitoTraps);
 
   const handleSetCenter = useCallback((center: LatLngTuple, map: Map) => {
     setCenter(center);

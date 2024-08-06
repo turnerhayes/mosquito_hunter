@@ -1,9 +1,13 @@
 "use server";
 
 import {Client} from "pg";
-import { promisify } from "node:util";
 import getImageSize from "image-size";
 
+
+interface Point {
+    x: number;
+    y: number;
+}
 
 let client: Client|null = null;
 
@@ -155,6 +159,11 @@ export const removeBreedingSite = async (id: number) => {
             ]
         );
 
+        if (rows.length !== 1) {
+            await client.query("ROLLBACK");
+            return false;
+        }
+
         const {photo_id} = rows[0];
 
         await removePhoto(photo_id, client);
@@ -169,7 +178,13 @@ export const removeBreedingSite = async (id: number) => {
 export const getAllBreedingSites = async () => {
     const client = await getClient();
 
-    const {rows} = await client.query(
+    const {rows} = await client.query<{
+        id: number;
+        location: Point,
+        photo_id: number;
+        photo_width: number;
+        photo_height: number;
+    }>(
         `
             SELECT
                 bs.id,
@@ -214,7 +229,10 @@ export const getBreedingSite = async (
 ) => {
     const client = await getClient();
 
-    const {rows} = await client.query(
+    const {rows} = await client.query<{
+        location: Point;
+        photo_id: number;
+    }>(
         `
             SELECT
                 location,
@@ -248,7 +266,9 @@ export const addTrap = async (
     const client = await getClient();
 
     try {
-        const {rows} = await client.query(
+        const {rows} = await client.query<{
+            id: number;
+        }>(
             `
                 INSERT INTO traps (
                     location
@@ -274,7 +294,10 @@ export const addTrap = async (
 export const getAllTraps = async () => {
     const client = await getClient();
 
-    const {rows} = await client.query(
+    const {rows} = await client.query<{
+        id: number;
+        location: Point;
+    }>(
         `
             SELECT
                 id,
@@ -299,7 +322,9 @@ export const getTrap = async (
 ) => {
     const client = await getClient();
 
-    const {rows} = await client.query(
+    const {rows} = await client.query<{
+        location: Point;
+    }>(
         `
             SELECT
                 location
@@ -319,4 +344,21 @@ export const getTrap = async (
         id,
         location: [location.x, location.y],
     };
+};
+
+export const removeMosquitoTrap = async (id: number) => {
+    const client = await getClient();
+
+    const {rows} = await client.query(
+        `
+            DELETE FROM traps
+            WHERE id=$1
+            RETURNING id
+        `,
+        [
+            id,
+        ]
+    );
+
+    return rows.length == 1;
 };

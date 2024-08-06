@@ -111,9 +111,16 @@ export async function DELETE(
     }
 
     try {
-        await removeBreedingSite(id);
-        return new Response(`Breeding site ${id} deleted`, {
-            status: 200,
+        const removed = await removeBreedingSite(id);
+
+        if (!removed) {
+            return new Response(`No breeding site with ID ${id} found`, {
+                status: 404,
+            });
+        }
+
+        return new Response(null, {
+            status: 204,
         });
     }
     catch (ex) {
