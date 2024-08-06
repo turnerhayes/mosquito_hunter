@@ -2,12 +2,37 @@
 
 import {Client} from "pg";
 import getImageSize from "image-size";
+import { Collection } from "..";
 
 
 interface Point {
     x: number;
     y: number;
 }
+
+interface CollectionRow {
+    id: number;
+    timestamp: number;
+    mosquito_count: number;
+    trap_id: number;
+    photo_id: number;
+    photo_width: number;
+    photo_height: number;
+}
+
+export type CollectionAddArgs = {
+    timestamp: number;
+    mosquitoCount: number;
+    trapId?: number;
+} & (
+    {
+        photoBuffer: ArrayBufferLike;
+        photoType: string;
+    } | {
+        photoBuffer?: never;
+        photoType?: never;
+    }
+)
 
 let client: Client|null = null;
 
@@ -79,9 +104,13 @@ export const removePhoto = async (id: number, client?: Client) => {
 
 export const getPhoto = async (id: number) => {
     const client = await getClient();
-    const {rows: [res,]} = await client.query(`
+    const {rows: [res,], rowCount} = await client.query(`
         SELECT mime_type, file, width, height FROM photos WHERE id = ${id}
     `);
+
+    if (rowCount !== 1) {
+        return null;
+    }
 
     const buff = Buffer.from(res["file"], "hex");
 
@@ -361,4 +390,187 @@ export const removeMosquitoTrap = async (id: number) => {
     );
 
     return rows.length == 1;
+};
+
+export const getAllCollections = async () => {
+    const client = await getClient();
+
+    const {rows} = await client.query<CollectionRow>(
+        `
+            SELECT
+                c.id,
+                date_part('epoch', c.timestamp) AS timestamp,
+                c.mosquito_count,
+                c.trap_id,
+                c.photo_id,
+                p.width AS photo_width,
+                p.height AS photo_height
+            FROM
+                collections AS c
+            LEFT OUTER JOIN
+                photos AS p
+            ON
+                c.photo_id = p.id
+        `
+    );
+
+    return rows.map(
+        ({
+            id,
+            timestamp,
+            mosquito_count,
+            trap_id,
+            photo_id,
+            photo_width,
+            photo_height,
+        }) => ({
+            id,
+            timestamp,
+            mosquito_count,
+            trap_id,
+            photo_id,
+            photo_width,
+            photo_height,
+        })
+    );
+};
+
+export const getCollection = async (id: number) => {
+    const client = await getClient();
+
+    const {rows} = await client.query<
+        Omit<CollectionRow, "id">
+    >(
+        `
+            SELECT
+                date_part('epoch', c.timestamp) AS timestamp,
+                c.mosquito_count,
+                c.trap_id,
+                c.photo_id,
+                p.width AS photo_width,
+                p.height AS photo_height
+            FROM
+                collections AS c
+            LEFT OUTER JOIN
+                photos AS p
+            ON
+                c.photo_id = p.id
+            WHERE c.id = $1
+        `,
+        [
+            id,
+        ]
+    );
+
+    if (rows.length === 0) {
+        return null;
+    }
+
+    const {
+        timestamp,
+        mosquito_count,
+        trap_id,
+        photo_id,
+        photo_width,
+        photo_height,
+    } = rows[0];
+
+    return {
+        id,
+        timestamp,
+        mosquito_count,
+        trap_id,
+        photo_id,
+        photo_width,
+        photo_height,
+    };
+};
+
+export const addCollection = async (
+    {
+        timestamp,
+        mosquitoCount,
+        trapId,
+        photoBuffer,
+        photoType,
+    }: CollectionAddArgs
+) => {
+    const client = await getClient();
+
+    await client.query("BEGIN");
+
+    try {
+        let photoId: number|undefined;
+        if (photoBuffer) {
+            photoId = await insertPhoto({
+                file: photoBuffer,
+                type: photoType,
+                client,
+            });
+        }
+        const {rows} = await client.query<{
+            id: number;
+        }>(
+            `
+                INSERT INTO collections
+                (
+                    timestamp,
+                    mosquito_count,
+                    trap_id,
+                    photo_id
+                ) VALUES (
+                    to_timestamp($1),
+                    $2,
+                    $3,
+                    $4
+                )
+                RETURNING id
+            `,
+            [
+                timestamp,
+                mosquitoCount,
+                trapId,
+                photoId,
+            ]
+        );
+        await client.query("COMMIT");
+        return rows[0].id;
+    }
+    catch (ex) {
+        await client.query("ROLLBACK");
+        throw ex;
+    }
+};
+
+export const removeCollection = async (id: number) => {
+    const client = await getClient();
+
+    try {
+        const {rows} = await client.query<{
+            photo_id: number;
+        }>(
+            `
+                DELETE FROM collections
+                WHERE id = $1
+                RETURNING photo_id
+            `,
+            [
+                id,
+            ]
+        );
+    
+        if (rows.length !== 1) {
+            await client.query("ROLLBACK");
+            return false;
+        }
+
+        const {photo_id} = rows[0];
+
+        await removePhoto(photo_id, client);
+        await client.query("COMMIT");
+    }
+    catch (ex) {
+        await client.query("ROLLBACK");
+        throw ex;
+    }
 };

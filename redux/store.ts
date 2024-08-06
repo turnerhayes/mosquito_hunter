@@ -1,22 +1,27 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer, REGISTER, PURGE, PERSIST, PAUSE, REHYDRATE, FLUSH } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { collectionRecordsReducer } from "./slices/collection_records";
 import { settingsReducer } from "./slices/settings_slice";
 import { breedingSitesApi } from "@/app/api/client/breeding_sites";
 import { mosquitoTrapsApi } from "@/app/api/client/mosquito_traps";
+import { collectionsApi } from "@/app/api/client/collections";
 
 
 const rootReducer = combineReducers({
   [breedingSitesApi.reducerPath]: breedingSitesApi.reducer,
   [mosquitoTrapsApi.reducerPath]: mosquitoTrapsApi.reducer,
-  collectionRecords: collectionRecordsReducer,
+  [collectionsApi.reducerPath]: collectionsApi.reducer,
   settings: settingsReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
+  blacklist: [
+    breedingSitesApi.reducerPath,
+    mosquitoTrapsApi.reducerPath,
+    collectionsApi.reducerPath,
+  ]
 };
 
 
@@ -30,7 +35,7 @@ export const makeStore = () => {
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(breedingSitesApi.middleware, mosquitoTrapsApi.middleware)
+    }).concat(breedingSitesApi.middleware, mosquitoTrapsApi.middleware, collectionsApi.middleware)
   });
   return store;
 };

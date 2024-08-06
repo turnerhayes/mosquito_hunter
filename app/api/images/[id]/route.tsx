@@ -7,6 +7,12 @@ export async function GET(_request: Request, {params}: {params: {id: string;}}) 
 
     const photo = await getPhoto(photoId);
 
+    if (!photo) {
+        return new Response(null, {
+            status: 404,
+        });
+    }
+
     const buff = photo.buffer;
 
     return new Response(buff, {

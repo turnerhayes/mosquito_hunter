@@ -25,6 +25,9 @@ async function run() {
             DROP TABLE IF EXISTS breeding_sites
         `);
         await client.query(`
+            DROP TABLE IF EXISTS collections
+        `);
+        await client.query(`
             DROP TABLE IF EXISTS traps
         `);
         await client.query(`

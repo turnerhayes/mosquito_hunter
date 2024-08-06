@@ -1,4 +1,4 @@
-export type PhotoId = string;
+export type PhotoId = number;
 
 export interface PhotoDimensions {
     width: number;
