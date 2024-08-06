@@ -5,10 +5,11 @@ import { breedingSitesReducer } from "@/redux/slices/breeding_sites";
 import { mosquitoTrapsReducer } from "@/redux/slices/mosquito_traps";
 import { collectionRecordsReducer } from "./slices/collection_records";
 import { settingsReducer } from "./slices/settings_slice";
+import { breedingSitesApi } from "@/app/api/client/breeding_sites";
 
 
 const rootReducer = combineReducers({
-  breedingSites: breedingSitesReducer,
+  [breedingSitesApi.reducerPath]: breedingSitesApi.reducer,
   mosquitoTraps: mosquitoTrapsReducer,
   collectionRecords: collectionRecordsReducer,
   settings: settingsReducer,
@@ -30,7 +31,7 @@ export const makeStore = () => {
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       }
-    })
+    }).concat(breedingSitesApi.middleware)
   });
   return store;
 };

@@ -1,4 +1,4 @@
-import { addBreedingSite, getBreedingSite } from "@/app/server/db";
+import { addBreedingSite, getBreedingSite, removeBreedingSite } from "@/app/server/db";
 
 
 export const dynamic = 'force-dynamic';
@@ -83,6 +83,43 @@ export async function POST(
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
+        });
+    }
+}
+
+export async function DELETE(
+    _response: Response,
+    {
+        params: {
+            locationOrId: idString,
+        }
+    }: {
+        params: {
+            locationOrId: string;
+        };
+    }
+) {
+    const id = Number(idString);
+
+    if (Number.isNaN(id)) {
+        return new Response(
+            `${idString} is not a valid breeding site ID; must be an integer`,
+            {
+                status: 400,
+            }
+        );
+    }
+
+    try {
+        await removeBreedingSite(id);
+        return new Response(`Breeding site ${id} deleted`, {
+            status: 200,
+        });
+    }
+    catch (ex) {
+        return new Response(null, {
+            status: 500,
+            statusText: (ex as Error).message
         });
     }
 }

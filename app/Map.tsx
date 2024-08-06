@@ -10,16 +10,19 @@ import {
   useMapEvents,
   LayersControl,
   LayerGroup,
+  useMap,
 } from "react-leaflet";
 import L, { ErrorEvent, Icon, LatLngTuple, Map } from "leaflet";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { takePhoto, savePhoto, getPhotosForBreedingSites } from "@/app/photos";
-import { addBreedingSite, BreedingSite, removeBreedingSite } from "@/redux/slices/breeding_sites";
+import { takePhoto, savePhoto, getImageDimensions } from "@/app/photos";
+import { removeBreedingSite } from "@/redux/slices/breeding_sites";
+import { BreedingSite } from "@/app/index";
 import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
-import { getBreedingSites, getMosquitoTraps } from "@/redux/selectors";
+import { getMosquitoTraps } from "@/redux/selectors";
 import { LoggingType } from "@/app/index.d";
 import { addMosquitoTrap, MosquitoTrap, removeMosquitoTrap } from "@/redux/slices/mosquito_traps";
-import { BASE_PATH } from "./path";
+import { BASE_PATH } from "@/app/path";
+import { useAddBreedingSiteMutation, useRemoveBreedingSiteMutation } from "@/app/api/client/breeding_sites";
 
 
 const MAP_PIN_HEIGHT = 50;
@@ -48,67 +51,47 @@ const createLocateMeButton = () => {
   return new LocateMeButton({position: "topleft"});
 };
 
-const LogLocationButton = (
+const LogBreedingSiteButton = (
   {
     location,
-    loggingType,
     onFinish,
   }: {
     location: LatLngTuple;
-    loggingType: LoggingType;
     onFinish?: () => void;
   }
 ) => {
-  const dispatch = useAppDispatch();
+  const [addBreedingSite] = useAddBreedingSiteMutation();
 
   const handleTakePhotoClick = useCallback(
     async (event: React.MouseEvent) => {
       event.stopPropagation();
       const f = await takePhoto();
-      const id = await savePhoto(f);
-      dispatch(addBreedingSite({
-        location,
-        photoId: id,
-      }));
-      onFinish?.();
+      const photoBuffer = await f.arrayBuffer();
+      const {
+        width: photo_width,
+        height: photo_height,
+      } = await getImageDimensions(f);
+
+      try {
+        await addBreedingSite({
+          location,
+          photoBuffer,
+          mimeType: f.type,
+          photo_width,
+          photo_height,
+        }).unwrap();
+        onFinish?.();
+      }
+      catch (ex) {
+
+      }
     },
     [
-      dispatch,
+      addBreedingSite,
       location,
       onFinish,
     ]
   );
-
-  const handleLogTrap = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    dispatch(addMosquitoTrap({
-      location,
-    }));
-    onFinish?.();
-  }, [
-    dispatch,
-    location,
-    onFinish,
-  ]);
-
-  if (loggingType === LoggingType.MOSQUITO_TRAP) {
-    return (
-      <button
-        onClick={handleLogTrap}
-        className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
-      >
-        <Image
-          src={`${BASE_PATH}/no_mosquito.png`}
-          alt="An icon of a mosquito with a slash through it, representing a mosquito trap"
-          width={32}
-          height={32}
-        />
-        <div>
-          Log a mosquito trap
-        </div>
-      </button>
-    );
-  }
 
   return (
     <button
@@ -126,41 +109,73 @@ const LogLocationButton = (
       </div>
     </button>
   );
+};
+
+const LogMosquitoTrapButton = (
+  {
+    location,
+    onFinish,
+  }: {
+    location: LatLngTuple;
+    onFinish?: () => void;
+  }
+) => {
+  const dispatch = useAppDispatch();
+
+  const handleLogTrap = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    dispatch(addMosquitoTrap({
+      location,
+    }));
+    onFinish?.();
+  }, [
+    dispatch,
+    location,
+    onFinish,
+  ]);
+
+  return (
+    <button
+      onClick={handleLogTrap}
+      className="w-14 p-2 cursor-pointer bg-transparent border rounded flex flex-col items-center"
+    >
+      <Image
+        src={`${BASE_PATH}/no_mosquito.png`}
+        alt="An icon of a mosquito with a slash through it, representing a mosquito trap"
+        width={32}
+        height={32}
+      />
+      <div>
+        Log a mosquito trap
+      </div>
+    </button>
+  );
 }
 
 const BreedingSiteMarker = (
   {
-    location,
-    photo,
+    breedingSite,
   }: {
-    location: LatLngTuple;
-    photo?: PhotoWithDimensions | null;
+    breedingSite: BreedingSite;
   }
 ) => {
-  const [photoUrl, setPhotoUrl] = useState<string|null>(null);
+  const [removeBreedingSite] = useRemoveBreedingSiteMutation();
+  const map = useMap();
 
-  useEffect(() => {
-    if (photo) {
-      setPhotoUrl(URL.createObjectURL(photo.file));
-    }
-  }, [
-    photo,
-    setPhotoUrl,
-  ]);
-
-  const dispatch = useAppDispatch();
-
-  const handleRemoveBreedingGround = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    dispatch(removeBreedingSite(location));
-  }, [
-    dispatch,
-    location,
-  ]);
+  const handleRemoveBreedingGround = useCallback(
+    async (event: React.MouseEvent) => {
+      event.stopPropagation();
+      await removeBreedingSite(breedingSite.id);
+      map.closePopup();
+    }, [
+      removeBreedingSite,
+      breedingSite,
+    ]
+  );
 
   return (
     <Marker
-      position={location}
+      position={breedingSite.location}
       icon={
         new Icon({
           iconUrl: `${BASE_PATH}/bucket_map_pin.png`,
@@ -183,16 +198,12 @@ const BreedingSiteMarker = (
             🗑️
           </button>
         </header>
-        {
-          photo && photoUrl ? (
-            <Image
-              src={photoUrl}
-              alt="Image of submitted breeding ground"
-              width={photo.dimensions.width}
-              height={photo.dimensions.height}
-            />
-          ) : null
-        }
+        <Image
+          src={`/api/images/${breedingSite.photo_id}`}
+          alt="Image of submitted breeding ground"
+          width={breedingSite.photo_width}
+          height={breedingSite.photo_height}
+        />
       </Popup>
     </Marker>
   );
@@ -244,19 +255,16 @@ const MosquitoTrapMarker = (
 const MapLayers = (
   {
     breedingSites,
-    breedingSitePhotos,
     mosquitoTraps,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: PhotoWithDimensions|null};
     mosquitoTraps: MosquitoTrap[];
   }
 ) => {
   const breedingSiteMarkers = breedingSites.map((breedingSite, index) => (
     <BreedingSiteMarker
       key={index}
-      location={breedingSite.location}
-      photo={breedingSitePhotos[breedingSite.photoId]}
+      breedingSite={breedingSite}
     />
   ));
 
@@ -286,13 +294,11 @@ const MapLayers = (
 const MapComponent = (
   {
     breedingSites,
-    breedingSitePhotos,
     mosquitoTraps,
     onSetCenter,
     onLocateError,
   }: {
     breedingSites: BreedingSite[];
-    breedingSitePhotos: {[photoId: PhotoId]: PhotoWithDimensions|null};
     mosquitoTraps: MosquitoTrap[];
     onSetCenter: (center: LatLngTuple, map: Map) => void;
     onLocateError: (error: ErrorEvent) => void;
@@ -351,7 +357,6 @@ const MapComponent = (
       />
       <MapLayers
         breedingSites={breedingSites}
-        breedingSitePhotos={breedingSitePhotos}
         mosquitoTraps={mosquitoTraps}
       />
       {popupPosition ? (
@@ -361,14 +366,12 @@ const MapComponent = (
               <h3 className="text-lg">Log a site</h3>
             </header>
             <div className="flex gap-x-1">
-              <LogLocationButton
+              <LogBreedingSiteButton
                 location={popupPosition!}
-                loggingType={LoggingType.BREEDING_SITE}
                 onFinish={closePopup}
               />
-              <LogLocationButton
+              <LogMosquitoTrapButton
                 location={popupPosition!}
-                loggingType={LoggingType.MOSQUITO_TRAP}
                 onFinish={closePopup}
               />
             </div>
@@ -379,24 +382,17 @@ const MapComponent = (
   );
 };
 
-export const MapContainerComponent = () => {
+export const MapContainerComponent = (
+  {
+    breedingSites,
+  }: {
+    breedingSites: BreedingSite[];
+  }
+) => {
   const [center, setCenter] = useState<LatLngTuple|null>(null);
-  const [breedingSitePhotos, setBreedingSitePhotos] = useState<{
-    [photoId: PhotoId]: PhotoWithDimensions|null;
-  }>({});
   const [locateError, setLocateError] = useState(false);
 
   const mosquitoTraps = useAppSelector(getMosquitoTraps);
-  const breedingSites = useAppSelector(getBreedingSites);
-
-  useEffect(() => {
-    getPhotosForBreedingSites(breedingSites).then((photos) => {
-      setBreedingSitePhotos(photos);
-    });
-  }, [
-    breedingSites,
-    setBreedingSitePhotos,
-  ]);
 
   const handleSetCenter = useCallback((center: LatLngTuple, map: Map) => {
     setCenter(center);
@@ -426,7 +422,7 @@ export const MapContainerComponent = () => {
     });
 
     if (result.state !== "granted") {
-      result.onchange = (event) => {
+      result.onchange = () => {
         if (result.state !== "denied") {
           locateAndSetCenter();
         }
@@ -434,14 +430,6 @@ export const MapContainerComponent = () => {
     }
   }, [
     setLocateError,
-    locateAndSetCenter,
-  ]);
-
-  const handleLocateMeButtonClick = useCallback((event: MouseEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-    locateAndSetCenter();
-  }, [
     locateAndSetCenter,
   ]);
 
@@ -462,7 +450,6 @@ export const MapContainerComponent = () => {
           onSetCenter={handleSetCenter}
           onLocateError={handleLocateError}
           breedingSites={breedingSites}
-          breedingSitePhotos={breedingSitePhotos}
           mosquitoTraps={mosquitoTraps}
         />
       </MapContainer>

@@ -7,6 +7,7 @@ import Script from "next/script";
 import { useAppSelector } from "@/redux/hooks";
 import { getSetting } from "@/redux/selectors";
 import { SettingName } from "@/redux/slices/settings_slice";
+import { useGetAllBreedingSitesQuery } from "./api/client/breeding_sites";
 
 
 const Map = dynamic(() => import("@/app/Map"), { ssr:false });
@@ -26,9 +27,12 @@ export const Home = () => {
         showEducation,
     ]);
 
+    const { data: breedingSites } = useGetAllBreedingSitesQuery();
+
     return (
         <>
-           <Map
+            <Map
+                breedingSites={breedingSites ?? []}
             />
             <Script
                 stylesheets={[

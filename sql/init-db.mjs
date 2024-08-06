@@ -25,6 +25,8 @@ async function run() {
             CREATE TABLE IF NOT EXISTS photos (
                 id SERIAL PRIMARY KEY,
                 file bytea NOT NULL,
+                width int NOT NULL,
+                height int NOT NULL,
                 mime_type varchar(30) NOT NULL
             )
         `);

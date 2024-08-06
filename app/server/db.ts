@@ -1,6 +1,9 @@
 "use server";
 
 import {Client} from "pg";
+import { promisify } from "node:util";
+import getImageSize from "image-size";
+
 
 let client: Client|null = null;
 
@@ -20,25 +23,36 @@ export const insertPhoto = async (
     {
         file,
         type,
+        client,
     }: {
         file: ArrayBufferLike;
         type: string;
+        client?: Client;
     }
 ) => {
-    const client = await getClient();
+    const {width, height} = getImageSize(new Uint8Array(file));
+    if (!client) {
+        client = await getClient();
+    }
     const {rows} = await client.query(`
         INSERT INTO photos (
             file,
-            mime_type
+            mime_type,
+            width,
+            height
         ) VALUES (
             $1,
-            $2
+            $2,
+            $3,
+            $4
         )
         RETURNING id
     `,
         [
             Buffer.from(file),
             type,
+            width,
+            height
         ]
     );
     const id = rows[0].id;
@@ -46,21 +60,33 @@ export const insertPhoto = async (
     return id;
 };
 
+export const removePhoto = async (id: number, client?: Client) => {
+    if (!client) {
+        client = await getClient();
+    }
+
+    await client.query(
+        'DELETE FROM photos WHERE id=$1',
+        [
+            id,
+        ]
+    );
+};
+
 export const getPhoto = async (id: number) => {
     const client = await getClient();
     const {rows: [res,]} = await client.query(`
-        SELECT filename, mime_type, file FROM photos WHERE id = ${id}
+        SELECT mime_type, file, width, height FROM photos WHERE id = ${id}
     `);
 
     const buff = Buffer.from(res["file"], "hex");
 
-    const file = new File(
-        [buff],
-        res["filename"],
-        {
-            type: res["mime_type"],
-        }
-    );
+    const file = {
+        buffer: buff,
+        width: res["width"],
+        height: res["height"],
+        type: res["mime_type"],
+    };
     return file;
 };
 
@@ -83,6 +109,7 @@ export const addBreedingSite = async (
         const photoId = await insertPhoto({
             file: photo,
             type: photoType,
+            client,
         });
         const {rows} = await client.query(
             `
@@ -110,25 +137,72 @@ export const addBreedingSite = async (
     }
 };
 
+export const removeBreedingSite = async (id: number) => {
+    const client = await getClient();
+
+    await client.query("BEGIN");
+    try {
+        const {rows} = await client.query<{
+            photo_id: number;
+        }>(
+            `
+                DELETE FROM breeding_sites
+                WHERE id=$1
+                RETURNING photo_id
+            `,
+            [
+                id,
+            ]
+        );
+
+        const {photo_id} = rows[0];
+
+        await removePhoto(photo_id, client);
+        await client.query("COMMIT");
+    }
+    catch (ex) {
+        await client.query("ROLLBACK");
+        throw ex;
+    }
+};
+
 export const getAllBreedingSites = async () => {
     const client = await getClient();
 
     const {rows} = await client.query(
         `
             SELECT
-                id,
-                location,
-                photo_id
+                bs.id,
+                bs.location,
+                bs.photo_id,
+                p.width AS photo_width,
+                p.height AS photo_height
             FROM
-                breeding_sites
+                breeding_sites AS bs
+            INNER JOIN
+                photos AS p
+            ON
+                bs.photo_id = p.id
         `
     );
 
-    return rows.map(({id, location, photo_id}) => ({
-        id,
-        location: [location.x, location.y],
-        photo_id,
-    }));
+    return rows.map(
+        (
+            {
+                id,
+                location,
+                photo_id,
+                photo_width,
+                photo_height,
+            }
+        ) => ({
+            id,
+            location: [location.x, location.y],
+            photo_id,
+            photo_width,
+            photo_height,
+        })
+    );
 };
 
 export const getBreedingSite = async (
