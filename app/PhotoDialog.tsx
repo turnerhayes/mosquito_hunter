@@ -1,7 +1,7 @@
 "use client";
 
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
-import { PhotoId } from "./photos.d";
+import { PhotoId } from "@/app";
 import { CloseIcon } from "./CloseIcon.svg";
 import Image from "next/image";
 

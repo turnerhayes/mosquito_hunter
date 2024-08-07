@@ -1,13 +1,17 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAppDispatch } from "@/redux/hooks";
-import { getImageDimensions, savePhoto } from "@/app/photos";
-import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
+import { getImageDimensions } from "@/app/photos";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAddCollectionMutation } from "./api/client/collections";
+import { PhotoDimensions } from "@/app";
 
+
+interface PhotoWithDimensions {
+    file: File;
+    dimensions: PhotoDimensions;
+}
 
 const padToTwoDigits = (num: number) => {
     if (num < 10) {
@@ -108,7 +112,6 @@ const PhotoDisplay = (
 export const RecordMosquitoCollection = () => {
     const [collectionDate, setCollectionDate] = useState<Date|null>(new Date());
     const [numMosquitoes, setNumMosquitoes] = useState<number|null>(null);
-    const [photoId, setPhotoId] = useState<PhotoId|null>(null);
     const [photo, setPhoto] = useState<PhotoWithDimensions|null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -171,17 +174,12 @@ export const RecordMosquitoCollection = () => {
             return;
         }
 
-        const [photoId, dimensions] = await Promise.all([
-            savePhoto(file),
-            getImageDimensions(file),
-        ]);
-        setPhotoId(photoId);
+        const dimensions = await getImageDimensions(file);
         setPhoto({
             file,
             dimensions,
         });
     }, [
-        setPhotoId,
         setPhoto,
         photo,
     ]);

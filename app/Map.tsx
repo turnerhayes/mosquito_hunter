@@ -127,6 +127,7 @@ const LogMosquitoTrapButton = (
       onFinish?.();
     }, [
       location,
+      addMosquitoTrap,
       onFinish,
     ]
   );
@@ -167,6 +168,7 @@ const BreedingSiteMarker = (
     }, [
       removeBreedingSite,
       breedingSite,
+      map,
     ]
   );
 
