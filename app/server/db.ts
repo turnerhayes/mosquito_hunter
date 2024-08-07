@@ -1,8 +1,7 @@
 "use server";
 
-import {Client} from "pg";
+import { Client, Pool } from "pg";
 import getImageSize from "image-size";
-import { Collection } from "..";
 
 
 interface Point {
@@ -25,27 +24,29 @@ export type CollectionAddArgs = {
     mosquitoCount: number;
     trapId?: number;
 } & (
-    {
-        photoBuffer: ArrayBufferLike;
-        photoType: string;
-    } | {
-        photoBuffer?: never;
-        photoType?: never;
-    }
-)
+        {
+            photoBuffer: ArrayBufferLike;
+            photoType: string;
+        } | {
+            photoBuffer?: never;
+            photoType?: never;
+        }
+    )
 
-let client: Client|null = null;
+let pool: Pool | null = null;
 
 const getClient = async () => {
-    if (!client) {
-        client = new Client({
-            connectionString: process.env.POSTGRES_URL,
+    if (!pool) {
+        pool = new Pool({
+            connectionString: process.env.POSTGRES_URL
         });
 
-        client.connect();
+        pool.on("error", (err) => {
+            console.error("Unexpected error on idle client", err);
+        });
     }
 
-    return client;
+    return await pool.connect();
 };
 
 export const insertPhoto = async (
@@ -59,11 +60,11 @@ export const insertPhoto = async (
         client?: Client;
     }
 ) => {
-    const {width, height} = getImageSize(new Uint8Array(file));
+    const { width, height } = getImageSize(new Uint8Array(file));
     if (!client) {
         client = await getClient();
     }
-    const {rows} = await client.query(`
+    const { rows } = await client.query(`
         INSERT INTO photos (
             file,
             mime_type,
@@ -104,7 +105,7 @@ export const removePhoto = async (id: number, client?: Client) => {
 
 export const getPhoto = async (id: number) => {
     const client = await getClient();
-    const {rows: [res,], rowCount} = await client.query(`
+    const { rows: [res,], rowCount } = await client.query(`
         SELECT mime_type, file, width, height FROM photos WHERE id = ${id}
     `);
 
@@ -143,7 +144,7 @@ export const addBreedingSite = async (
             type: photo.type,
             client,
         });
-        const {rows} = await client.query(
+        const { rows } = await client.query(
             `
                 INSERT INTO breeding_sites (
                     location,
@@ -174,7 +175,7 @@ export const removeBreedingSite = async (id: number) => {
 
     await client.query("BEGIN");
     try {
-        const {rows} = await client.query<{
+        const { rows } = await client.query<{
             photo_id: number;
         }>(
             `
@@ -192,7 +193,7 @@ export const removeBreedingSite = async (id: number) => {
             return false;
         }
 
-        const {photo_id} = rows[0];
+        const { photo_id } = rows[0];
 
         await removePhoto(photo_id, client);
         await client.query("COMMIT");
@@ -206,7 +207,7 @@ export const removeBreedingSite = async (id: number) => {
 export const getAllBreedingSites = async () => {
     const client = await getClient();
 
-    const {rows} = await client.query<{
+    const { rows } = await client.query<{
         id: number;
         location: Point,
         photo_id: number;
@@ -257,7 +258,7 @@ export const getBreedingSite = async (
 ) => {
     const client = await getClient();
 
-    const {rows} = await client.query<{
+    const { rows } = await client.query<{
         location: Point;
         photo_id: number;
     }>(
@@ -275,7 +276,7 @@ export const getBreedingSite = async (
         ]
     );
 
-    const {location, photo_id} = rows[0];
+    const { location, photo_id } = rows[0];
 
     return {
         id,
@@ -294,7 +295,7 @@ export const addTrap = async (
     const client = await getClient();
 
     try {
-        const {rows} = await client.query<{
+        const { rows } = await client.query<{
             id: number;
         }>(
             `
@@ -322,7 +323,7 @@ export const addTrap = async (
 export const getAllTraps = async () => {
     const client = await getClient();
 
-    const {rows} = await client.query<{
+    const { rows } = await client.query<{
         id: number;
         location: Point;
     }>(
@@ -335,7 +336,7 @@ export const getAllTraps = async () => {
         `
     );
 
-    return rows.map(({id, location}) => ({
+    return rows.map(({ id, location }) => ({
         id,
         location: [location.x, location.y],
     }));
@@ -350,7 +351,7 @@ export const getTrap = async (
 ) => {
     const client = await getClient();
 
-    const {rows} = await client.query<{
+    const { rows } = await client.query<{
         location: Point;
     }>(
         `
@@ -366,7 +367,7 @@ export const getTrap = async (
         ]
     );
 
-    const {location} = rows[0];
+    const { location } = rows[0];
 
     return {
         id,
@@ -377,7 +378,7 @@ export const getTrap = async (
 export const removeMosquitoTrap = async (id: number) => {
     const client = await getClient();
 
-    const {rows} = await client.query(
+    const { rows } = await client.query(
         `
             DELETE FROM traps
             WHERE id=$1
@@ -394,7 +395,7 @@ export const removeMosquitoTrap = async (id: number) => {
 export const getAllCollections = async () => {
     const client = await getClient();
 
-    const {rows} = await client.query<CollectionRow>(
+    const { rows } = await client.query<CollectionRow>(
         `
             SELECT
                 c.id,
@@ -437,7 +438,7 @@ export const getAllCollections = async () => {
 export const getCollection = async (id: number) => {
     const client = await getClient();
 
-    const {rows} = await client.query<
+    const { rows } = await client.query<
         Omit<CollectionRow, "id">
     >(
         `
@@ -499,7 +500,7 @@ export const addCollection = async (
     await client.query("BEGIN");
 
     try {
-        let photoId: number|undefined;
+        let photoId: number | undefined;
         if (photoBuffer) {
             photoId = await insertPhoto({
                 file: photoBuffer,
@@ -507,7 +508,7 @@ export const addCollection = async (
                 client,
             });
         }
-        const {rows} = await client.query<{
+        const { rows } = await client.query<{
             id: number;
         }>(
             `
@@ -545,7 +546,7 @@ export const removeCollection = async (id: number) => {
     const client = await getClient();
 
     try {
-        const {rows} = await client.query<{
+        const { rows } = await client.query<{
             photo_id: number;
         }>(
             `
@@ -557,13 +558,13 @@ export const removeCollection = async (id: number) => {
                 id,
             ]
         );
-    
+
         if (rows.length !== 1) {
             await client.query("ROLLBACK");
             return false;
         }
 
-        const {photo_id} = rows[0];
+        const { photo_id } = rows[0];
 
         await removePhoto(photo_id, client);
         await client.query("COMMIT");
