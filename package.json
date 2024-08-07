@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "init-db": "node sql/init-db.mjs",
-    "clear-db": "node sql/clear-db.mjs"
+    "clear-db": "node sql/clear-db.mjs",
+    "postinstall": "npm run init-db"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.6",
