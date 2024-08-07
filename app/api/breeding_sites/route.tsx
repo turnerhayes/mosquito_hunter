@@ -10,6 +10,7 @@ export async function GET() {
         return Response.json(sites);
     }
     catch (ex) {
+        console.error("GET all breeding sites error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
         });
     }
     catch (ex) {
+        console.error("POST breeding site error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,

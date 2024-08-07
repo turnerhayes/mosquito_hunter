@@ -7,11 +7,11 @@ export async function DELETE(
     _request: Request,
     {
         params: {
-            locationOrId: idString,
+            id: idString,
         }
     }: {
         params: {
-            locationOrId: string;
+            id: string;
         };
     }
 ) {
@@ -50,19 +50,19 @@ export async function GET(
     _request: Request,
     {
         params: {
-            locationOrId: id,
+            id: idString,
         },
     }: {
         params: {
-            locationOrId: string;
+            id: string;
         };
     }
 ) {
-    const idNum = Number(id);
+    const id = Number(idString);
 
-    if (Number.isNaN(idNum)) {
+    if (Number.isNaN(id)) {
         return new Response(
-            `${id} is not a valid number`,
+            `${idString} is not a valid number`,
             {
                 status: 400,
             }
@@ -71,12 +71,13 @@ export async function GET(
 
     try {
         const trap = await getTrap({
-            id: idNum,
+            id,
         });
 
         return Response.json(trap);
     }
     catch (ex) {
+        console.error(`GET trap ${id} error:`, ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,

@@ -10,6 +10,7 @@ export async function GET() {
         return Response.json(collections);
     }
     catch (ex) {
+        console.error("GET all collections error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
         });
     }
     catch (ex) {
+        console.error("POST collection error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,

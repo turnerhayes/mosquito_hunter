@@ -57,6 +57,7 @@ export async function POST(request: Request) {
         });
     }
     catch (ex) {
+        console.error("POST trap error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
@@ -71,6 +72,7 @@ export async function GET() {
         return Response.json(traps);
     }
     catch (ex) {
+        console.error("GET all traps error:", ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,

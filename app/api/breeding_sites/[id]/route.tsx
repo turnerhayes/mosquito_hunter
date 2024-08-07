@@ -40,6 +40,7 @@ export async function DELETE(
         });
     }
     catch (ex) {
+        console.error(`DELETE breeding site ${id} error:`, ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message
@@ -78,6 +79,7 @@ export async function GET(
         return Response.json(site);
     }
     catch (ex) {
+        console.error(`GET breeding site ${id} error:`, ex);
         return new Response(null, {
             status: 500,
             statusText: (ex as Error).message,
