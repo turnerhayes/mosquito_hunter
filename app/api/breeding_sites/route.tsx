@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     if (!locationString) {
-        return new Response("Missing location", {
+        return new Response("Location is missing", {
             status: 400,
         });
     }
@@ -59,9 +59,9 @@ export async function POST(request: Request) {
                 locationString
             } is invalid; needs to be of the form [number, number]`,
             {
-            status: 400,
-        }
-    );
+                status: 400,
+            }
+        );
     }
 
     if (!location) {

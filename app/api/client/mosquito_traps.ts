@@ -23,8 +23,18 @@ export const mosquitoTrapsApi = createApi({
         >({
             query: (site) => {
                 return {
-                    url: `/[${site.location[0]},${site.location[1]}]`,
+                    url: "",
                     method: "POST",
+                    body: (() => {
+                        const fd = new FormData();
+
+                        fd.set(
+                            "location",
+                            `[${site.location[0]},${site.location[1]}]`
+                        );
+
+                        return fd;
+                    })(),
                 };
             },
             invalidatesTags: ["mosquito_traps"],
