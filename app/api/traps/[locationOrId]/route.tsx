@@ -70,7 +70,7 @@ export async function POST(
 }
 
 export async function DELETE(
-    _response: Response,
+    _request: Request,
     {
         params: {
             locationOrId: idString,

@@ -1,11 +1,11 @@
-import { getBreedingSite, getCollection, removeCollection } from "@/app/server/db";
+import { getCollection, removeCollection } from "@/app/server/db";
 
 
 export const dynamic = 'force-dynamic';
 
 
 export async function DELETE(
-    _response: Response,
+    _request: Request,
     {
         params: {
             id: idString,
