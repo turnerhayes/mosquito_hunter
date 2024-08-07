@@ -1,6 +1,6 @@
 "use server";
 
-import { Client, Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 import getImageSize from "image-size";
 
 
@@ -57,7 +57,7 @@ export const insertPhoto = async (
     }: {
         file: ArrayBufferLike;
         type: string;
-        client?: Client;
+        client?: PoolClient;
     }
 ) => {
     const { width, height } = getImageSize(new Uint8Array(file));
@@ -90,7 +90,7 @@ export const insertPhoto = async (
     return id;
 };
 
-export const removePhoto = async (id: number, client?: Client) => {
+export const removePhoto = async (id: number, client?: PoolClient) => {
     if (!client) {
         client = await getClient();
     }
