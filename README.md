@@ -8,3 +8,6 @@ It also has instructions on building a simple mosquito trap at home, and allows 
 ## Structure
 
 The app is a Next.js app with a Redux store. The map view uses React Leaflet. On the backend, it uses React Server Components and a PostgresSQL database.
+
+
+Live example: https://mosquito-hunter.vercel.app
