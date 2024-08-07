@@ -1,22 +1,27 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistStore, persistReducer, REGISTER, PURGE, PERSIST, PAUSE, REHYDRATE, FLUSH } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import { breedingSitesReducer } from "@/redux/slices/breeding_sites";
-import { mosquitoTrapsReducer } from "@/redux/slices/mosquito_traps";
-import { collectionRecordsReducer } from "./slices/collection_records";
 import { settingsReducer } from "./slices/settings_slice";
+import { breedingSitesApi } from "@/app/api/client/breeding_sites";
+import { mosquitoTrapsApi } from "@/app/api/client/mosquito_traps";
+import { collectionsApi } from "@/app/api/client/collections";
 
 
 const rootReducer = combineReducers({
-  breedingSites: breedingSitesReducer,
-  mosquitoTraps: mosquitoTrapsReducer,
-  collectionRecords: collectionRecordsReducer,
+  [breedingSitesApi.reducerPath]: breedingSitesApi.reducer,
+  [mosquitoTrapsApi.reducerPath]: mosquitoTrapsApi.reducer,
+  [collectionsApi.reducerPath]: collectionsApi.reducer,
   settings: settingsReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
+  blacklist: [
+    breedingSitesApi.reducerPath,
+    mosquitoTrapsApi.reducerPath,
+    collectionsApi.reducerPath,
+  ]
 };
 
 
@@ -29,8 +34,8 @@ export const makeStore = () => {
     middleware: (getDefaultMiddleware) => getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      }
-    })
+      },
+    }).concat(breedingSitesApi.middleware, mosquitoTrapsApi.middleware, collectionsApi.middleware)
   });
   return store;
 };

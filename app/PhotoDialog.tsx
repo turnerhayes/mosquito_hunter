@@ -1,56 +1,43 @@
 "use client";
 
 import { MouseEvent, useCallback, useEffect, useRef, useState } from "react";
-import { PhotoId, PhotoWithDimensions } from "./photos.d";
-import { getPhoto } from "./photos";
+import { PhotoId } from "@/app";
 import { CloseIcon } from "./CloseIcon.svg";
 import Image from "next/image";
 
 export const PhotoDialog = (
     {
         photoId,
+        photoWidth,
+        photoHeight,
         title,
         onClose,
     }: {
         photoId?: PhotoId;
+        photoWidth?: number;
+        photoHeight?: number;
         title: string;
         onClose?: () => void;
     }
 ) => {
     const dialogRef = useRef<HTMLDialogElement>(null);
     const bodyRef = useRef<HTMLDivElement>(null);
-    const [photo, setPhoto] = useState<PhotoWithDimensions|null>(null);
-    const [photoUrl, setPhotoUrl] = useState<string|null>(null);
     const [isOpen, setIsOpen] = useState(false);
 
     const close = useCallback((callCloseOnDialog = true) => {
         if (callCloseOnDialog) {
             dialogRef.current?.close();
         }
-        if (photoUrl) {
-            URL.revokeObjectURL(photoUrl);
-        }
-        setPhoto(null);
-        setPhotoUrl(null);
         setIsOpen(false);
         onClose?.();
     }, [
         dialogRef,
-        photoUrl,
         setIsOpen,
         onClose,
     ]);
 
     useEffect(() => {
         if (photoId) {
-            if (!photoUrl) {
-                getPhoto(photoId).then((photo) => {
-                    if (photo) {
-                        setPhoto(photo);
-                        setPhotoUrl(URL.createObjectURL(photo.file));
-                    }
-                });
-            }
             if (!isOpen) {
                 dialogRef.current?.showModal();
                 setIsOpen(true);
@@ -62,22 +49,12 @@ export const PhotoDialog = (
             }
         }
     }, [
-        setPhotoUrl,
         setIsOpen,
         close,
         dialogRef,
         photoId,
-        photoUrl,
         isOpen,
     ]);
-
-    useEffect(() => {
-        return () => {
-            if (photoUrl) {
-                URL.revokeObjectURL(photoUrl);
-            }
-        };
-    });
 
     const handleCloseClick = useCallback(() => {
         close();
@@ -128,11 +105,11 @@ export const PhotoDialog = (
                     className="flex-1"
                 >
                     {
-                        photo && photoUrl ? (
+                        photoId ? (
                             <Image
-                                src={photoUrl}
-                                width={photo.dimensions.width}
-                                height={photo.dimensions.height}
+                                src={`/api/images/${photoId}`}
+                                width={photoWidth}
+                                height={photoHeight}
                                 alt="Photo being displayed in the dialog"
                             />
                         ) : (

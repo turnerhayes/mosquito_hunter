@@ -1,13 +1,17 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAppDispatch } from "@/redux/hooks";
-import { addRecord } from "@/redux/slices/collection_records";
-import { getImageDimensions, savePhoto } from "@/app/photos";
-import { PhotoId, PhotoWithDimensions } from "@/app/photos.d";
+import { getImageDimensions } from "@/app/photos";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useAddCollectionMutation } from "./api/client/collections";
+import { PhotoDimensions } from "@/app";
 
+
+interface PhotoWithDimensions {
+    file: File;
+    dimensions: PhotoDimensions;
+}
 
 const padToTwoDigits = (num: number) => {
     if (num < 10) {
@@ -108,12 +112,10 @@ const PhotoDisplay = (
 export const RecordMosquitoCollection = () => {
     const [collectionDate, setCollectionDate] = useState<Date|null>(new Date());
     const [numMosquitoes, setNumMosquitoes] = useState<number|null>(null);
-    const [photoId, setPhotoId] = useState<PhotoId|null>(null);
     const [photo, setPhoto] = useState<PhotoWithDimensions|null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
-    const dispatch = useAppDispatch();
 
     const isSubmitEnabled = useMemo(() => {
         return Boolean(collectionDate) &&
@@ -125,27 +127,31 @@ export const RecordMosquitoCollection = () => {
         isSubmitting,
     ]);
 
-    const handleSubmit = useCallback((event: FormEvent) => {
-        setIsSubmitting(true);
-        event.preventDefault();
-        if (!collectionDate || !numMosquitoes) {
-            return false;
-        }
-        dispatch(addRecord({
-            timestamp: collectionDate.getTime(),
+    const [addRecord] = useAddCollectionMutation();
+
+    const handleSubmit = useCallback(
+        async (event: FormEvent) => {
+            setIsSubmitting(true);
+            event.preventDefault();
+            if (!collectionDate || !numMosquitoes) {
+                return false;
+            }
+            await addRecord({
+                timestamp: collectionDate.getTime(),
+                mosquito_count: numMosquitoes,
+                photo: photo?.file ?? undefined,
+            });
+            setIsSubmitting(false);
+            router.push("/collections");
+        }, [
+            addRecord,
+            setIsSubmitting,
+            collectionDate,
             numMosquitoes,
-            photoId: photoId ?? undefined,
-        }));
-        setIsSubmitting(false);
-        router.push("/collections");
-    }, [
-        dispatch,
-        setIsSubmitting,
-        collectionDate,
-        numMosquitoes,
-        photoId,
-        router,
-    ]);
+            photo,
+            router,
+        ]
+    );
 
     const handleCollectionDateChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
         setCollectionDate(event.target.valueAsDate);
@@ -168,17 +174,12 @@ export const RecordMosquitoCollection = () => {
             return;
         }
 
-        const [photoId, dimensions] = await Promise.all([
-            savePhoto(file),
-            getImageDimensions(file),
-        ]);
-        setPhotoId(photoId);
+        const dimensions = await getImageDimensions(file);
         setPhoto({
             file,
             dimensions,
         });
     }, [
-        setPhotoId,
         setPhoto,
         photo,
     ]);

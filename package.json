@@ -6,13 +6,20 @@
     "dev": "next dev --experimental-https",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "init-db": "node sql/init-db.mjs",
+    "clear-db": "node sql/clear-db.mjs",
+    "postinstall": "npm run init-db"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.2.6",
+    "@vercel/postgres": "^0.9.0",
+    "dotenv": "^16.4.5",
+    "image-size": "^1.1.1",
     "leaflet": "^1.9.4",
     "localforage": "^1.10.0",
     "next": "14.2.5",
+    "pg": "^8.12.0",
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",

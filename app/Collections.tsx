@@ -3,11 +3,11 @@
 import { useCallback, useState } from "react";
 import { useAppSelector } from "@/redux/hooks";
 import Link from "next/link";
-import { getCollectionRecords } from "@/redux/selectors";
-import { CollectionRecord } from "@/redux/slices/collection_records";
 import { PopupIcon } from "@/app/PopupIcon.svg";
 import { PhotoDialog } from "@/app/PhotoDialog";
-import { PhotoId } from "@/app/photos.d";
+import { PhotoId } from "@/app";
+import { Collection } from ".";
+import { useGetAllCollectionsQuery } from "./api/client/collections";
 
 
 const formatter = new Intl.DateTimeFormat();
@@ -33,18 +33,18 @@ const RecordCollectionLink = (
 
 const PopupPhotoButton = (
     {
-        photoId,
+        collection,
         onClick,
     }: {
-        photoId: PhotoId;
-        onClick: (photoId: PhotoId) => void;
+        collection: Collection;
+        onClick: (collection: Collection) => void;
     }
 ) => {
     const handleClick = useCallback(() => {
-        onClick(photoId);
+        onClick(collection);
     }, [
         onClick,
-        photoId,
+        collection,
     ]);
 
     return (
@@ -62,15 +62,19 @@ const CollectionsTable = (
     {
         collections,
     }: {
-        collections: CollectionRecord[];
+        collections: Collection[];
     }
 ) => {
     const [selectedPhotoId, setSelectedPhotoId] = useState<PhotoId|null>(null);
+    const [
+        selectedCollection,
+        setSelectedCollection
+    ] = useState<Collection|null>(null);
 
-    const handlePopupPhotoClick = useCallback((photoId: PhotoId) => {
-        setSelectedPhotoId(photoId);
+    const handlePopupPhotoClick = useCallback((collection: Collection) => {
+        setSelectedCollection(collection);
     }, [
-        setSelectedPhotoId,
+        setSelectedCollection,
     ]);
 
     const handlePhotoDialogClose = useCallback(() => {
@@ -116,14 +120,14 @@ const CollectionsTable = (
                                     {formatter.format(collection.timestamp)}
                                 </td>
                                 <td className={CELL_CLASSES}>
-                                    {collection.numMosquitoes}
+                                    {collection.mosquito_count}
                                 </td>
                                 <td className={CELL_CLASSES}>
                                     {
-                                        collection.photoId ? (
+                                        collection.photo_id ? (
                                             <div className="w-full h-full flex justify-center">
                                                 <PopupPhotoButton
-                                                    photoId={collection.photoId}
+                                                    collection={collection}
                                                     onClick={handlePopupPhotoClick}
                                                 />
                                             </div>
@@ -136,7 +140,9 @@ const CollectionsTable = (
                 </tbody>
             </table>
             <PhotoDialog
-                photoId={selectedPhotoId ?? undefined}
+                photoId={selectedCollection?.photo_id}
+                photoWidth={selectedCollection?.photo_width}
+                photoHeight={selectedCollection?.photo_height}
                 onClose={handlePhotoDialogClose}
                 title="Collection Photo"
             />
@@ -145,7 +151,9 @@ const CollectionsTable = (
 };
 
 export const Collections = () => {
-    const collections = useAppSelector(getCollectionRecords);
+    const {data: collections} = useGetAllCollectionsQuery();
+
+    console.log("collections:", collections);
 
     return (
         <div className="flex flex-col w-4/5 h-full mx-auto">
@@ -159,7 +167,7 @@ export const Collections = () => {
             </header>
             <div className="flex-1 flex items-center justify-center">
                 <CollectionsTable
-                    collections={collections}
+                    collections={collections ?? []}
                 />
             </div>
         </div>
