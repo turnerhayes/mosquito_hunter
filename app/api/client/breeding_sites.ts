@@ -19,19 +19,25 @@ export const breedingSitesApi = createApi({
 
         addBreedingSite: builder.mutation<
             BreedingSite,
-            Omit<BreedingSite, "id"|"photo_id"> & {
-                photoBuffer: ArrayBufferLike;
-                mimeType: string;
+            Omit<BreedingSite, "id"|"photo_id"|"photo_width"|"photo_height"> & {
+                photo: File;
             }
         >({
             query: (site) => {
                 return {
-                    url: `/[${site.location[0]},${site.location[1]}]`,
+                    url: "",
                     method: "POST",
-                    body: site.photoBuffer,
-                    headers: {
-                        "Content-Type": site.mimeType,
-                    },
+                    body: (() => {
+                        const fd = new FormData();
+
+                        fd.set("photo", site.photo);
+                        fd.set(
+                            "location",
+                            `[${site.location[0]},${site.location[1]}]`
+                        );
+
+                        return fd;
+                    })(),
                 };
             },
             invalidatesTags: ["breeding_sites"],

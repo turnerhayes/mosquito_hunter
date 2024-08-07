@@ -61,21 +61,13 @@ const LogBreedingSiteButton = (
   const handleTakePhotoClick = useCallback(
     async (event: React.MouseEvent) => {
       event.stopPropagation();
-      const f = await takePhoto();
-      const photoBuffer = await f.arrayBuffer();
-      const {
-        width: photo_width,
-        height: photo_height,
-      } = await getImageDimensions(f);
+      const photo = await takePhoto();
 
       try {
         await addBreedingSite({
           location,
-          photoBuffer,
-          mimeType: f.type,
-          photo_width,
-          photo_height,
-        }).unwrap();
+          photo,
+        });
         onFinish?.();
       }
       catch (ex) {

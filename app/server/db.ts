@@ -126,12 +126,10 @@ export const getPhoto = async (id: number) => {
 export const addBreedingSite = async (
     {
         location,
-        photo,
-        photoType
+        photo
     }: {
         location: [number, number];
-        photo: ArrayBufferLike;
-        photoType: string;
+        photo: File;
     }
 ): Promise<number> => {
     const client = await getClient();
@@ -139,9 +137,10 @@ export const addBreedingSite = async (
     await client.query("BEGIN");
 
     try {
+        const buffer = await photo.arrayBuffer();
         const photoId = await insertPhoto({
-            file: photo,
-            type: photoType,
+            file: buffer,
+            type: photo.type,
             client,
         });
         const {rows} = await client.query(
