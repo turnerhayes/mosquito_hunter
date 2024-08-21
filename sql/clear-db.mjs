@@ -33,6 +33,9 @@ async function run() {
         await client.query(`
             DROP TABLE IF EXISTS photos
         `);
+        await client.query(`
+            DROP TABLE IF EXISTS users
+        `);
         await client.query("COMMIT");
         console.log("Finished clearing DB");
     }

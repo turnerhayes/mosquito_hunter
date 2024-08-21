@@ -52,6 +52,14 @@ async function run() {
                 photo_id INTEGER REFERENCES photos (id)
             )
         `);
+
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id UUID PRIMARY KEY,
+                username VARCHAR(100) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL
+            )
+        `);
         await client.query("COMMIT");
         console.log("Finished initializing DB");
     }

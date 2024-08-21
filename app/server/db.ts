@@ -2,6 +2,7 @@
 
 import { Pool, PoolClient } from "pg";
 import getImageSize from "image-size";
+import { getClient } from "./client";
 
 
 interface Point {
@@ -33,21 +34,6 @@ export type CollectionAddArgs = {
         }
     )
 
-let pool: Pool | null = null;
-
-const getClient = async () => {
-    if (!pool) {
-        pool = new Pool({
-            connectionString: process.env.POSTGRES_URL
-        });
-
-        pool.on("error", (err) => {
-            console.error("Unexpected error on idle client", err);
-        });
-    }
-
-    return await pool.connect();
-};
 
 export const insertPhoto = async (
     {

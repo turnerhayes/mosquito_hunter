@@ -1,3 +1,4 @@
+import { Session as NextAuthSession, User as NextAuthUser } from "next-auth";
 import { LatLngTuple } from "leaflet";
 
 
@@ -37,3 +38,12 @@ export type Collection = {
         photo_height?: never;
     }
 );
+
+export interface User {
+    id: string;
+    username: string;
+}
+
+export interface Session extends NextAuthSession {
+    user?: NextAuthUser & User;
+}

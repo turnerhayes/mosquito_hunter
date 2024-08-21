@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HouseIcon } from "./HouseIcon.svg";
-import { Fragment, ReactElement } from "react";
+import { Fragment, ReactElement, useCallback } from "react";
+import { AccountButton } from "./AccountButton";
 
 
 type NavLink = {
@@ -40,7 +41,7 @@ export const AppHeader = () => {
     ];
 
     return (
-        <header className="h-11 from-slate-700 bg-gradient-to-t pl-2">
+        <header className="flex h-11 from-slate-700 bg-gradient-to-t pl-2 justify-between">
             <nav className="h-full">
                 <ul className="h-full flex items-center">
                     {
@@ -63,6 +64,9 @@ export const AppHeader = () => {
                     }
                 </ul>
             </nav>
+            <AccountButton
+                className="mr-1"
+            />
         </header>
     );
 };
