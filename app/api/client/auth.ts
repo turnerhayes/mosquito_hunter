@@ -11,8 +11,14 @@ export const signUp = async (
     fd.set("username", username);
     fd.set("password", password);
 
-    await fetch("/api/auth/signUp", {
+    const response = await fetch("/api/auth/signUp", {
         body: fd,
         method: "POST",
     });
+
+    const responseText = await response.text();
+
+    if (response.status >= 400) {
+        throw new Error(responseText || response.statusText);
+    }
 };

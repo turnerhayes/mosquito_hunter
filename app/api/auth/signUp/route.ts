@@ -25,14 +25,11 @@ export async function POST(request: Request) {
 
         return new Response(null, {
             status: 201,
-            headers: {
-                "Location": `/api/users/${userId}`,
-            },
         });
     }
     catch (ex) {
         console.error(ex);
-        return new Response(null, {
+        return new Response("Error adding user", {
             status: 500,
         });
     }

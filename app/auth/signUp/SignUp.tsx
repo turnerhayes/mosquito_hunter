@@ -59,7 +59,15 @@ export const SignUp = (
             const username = data.get("username") as string|undefined;
             const password = data.get("password") as string|undefined;
             const passwordConfirm = data.get("password_confirm") as string|undefined;
-        
+
+            const formCsrfToken = data.get("csrfToken") as string|undefined;
+
+            if (formCsrfToken !== csrfToken) {
+                return {
+                    submissionErrorMessage: "Error submitting form",
+                };
+            }
+
             const messages = validate({
                 username,
                 password,
@@ -77,14 +85,6 @@ export const SignUp = (
                     username: username!,
                     password: password!,
                 });
-                
-                await signIn("credentials", {
-                    username,
-                    password,
-                    redirect: false,
-                });
-
-                router.push("/");
             }
             catch (ex) {
                 console.error(ex);
@@ -92,6 +92,14 @@ export const SignUp = (
                     submissionErrorMessage: "There was an error signing up",
                 };
             }
+                
+            await signIn("credentials", {
+                username,
+                password,
+                redirect: false,
+            });
+
+            router.push("/");
         
             return {};
         }, [
