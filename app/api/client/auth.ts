@@ -22,3 +22,9 @@ export const signUp = async (
         throw new Error(responseText || response.statusText);
     }
 };
+
+export const checkUsernameAvailable = async (username: string) => {
+    const response = await fetch(`/api/users/${username}`);
+
+    return response.status >= 400;
+};

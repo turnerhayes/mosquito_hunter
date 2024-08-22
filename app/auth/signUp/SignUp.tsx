@@ -1,6 +1,6 @@
 "use client";
 
-import { signUp } from "@/app/api/client/auth";
+import { checkUsernameAvailable, signUp } from "@/app/api/client/auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useCallback, useState } from "react";
@@ -77,6 +77,16 @@ export const SignUp = (
             if (messages) {
                 return {
                     messages,
+                };
+            }
+
+            const isAvailable = await checkUsernameAvailable(username!);
+
+            if (!isAvailable) {
+                return {
+                    messages: {
+                        username: "Username is not available",
+                    },
                 };
             }
         
